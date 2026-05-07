@@ -3,7 +3,11 @@
  * Sekarang terhubung ke Backend Server (MySQL).
  */
 
-const API_URL = 'http://localhost:3000/api';
+// Menggunakan path relatif agar otomatis menyesuaikan dengan domain tempat web di-deploy
+// Di lokal akan ke localhost:3000/api, di Vercel akan ke domain-anda.com/api
+const API_URL = window.location.origin.includes('localhost') 
+    ? 'http://localhost:3000/api' 
+    : '/api';
 
 const ApiService = {
     // Mengambil data "Tentang Kami"

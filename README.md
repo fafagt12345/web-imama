@@ -20,8 +20,15 @@ Website ini sekarang menggunakan **MySQL**.
 
 ### Cara Menjalankan:
 1. Import `database.sql` ke MySQL Anda.
-2. Jalankan `npm install express mysql2 cors body-parser` di terminal.
+2. Jalankan `npm install express mysql2 cors body-parser dotenv` di terminal.
 3. Jalankan server dengan perintah `node server.js`.
 4. Buka `index.html` di browser.
 
-**Catatan:** Untuk mengganti password admin, ubah variabel `PASS` di `admin.js`.
+### Deployment
+Untuk menjalankan di server produksi:
+1. Pastikan variabel lingkungan (`.env`) sudah terisi:
+   - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+   - `ADMIN_PASS` (untuk keamanan, pindahkan PASS dari `admin.js` ke `.env`)
+2. Gunakan port dinamis: `const PORT = process.env.PORT || 3000;`.
+3. Gunakan process manager seperti **PM2**: `pm2 start server.js`.
+4. Pastikan folder publik di-serve melalui `express.static`.

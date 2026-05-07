@@ -19,20 +19,49 @@ const DEFAULT_IMG = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" 
 // Fitur Slide Otomatis Hero
 async function initHeroSlider() {
     const hero = document.querySelector('.hero');
-    if(!hero) return;
+    const dotsContainer = document.getElementById('heroDots');
+    if(!hero || !dotsContainer) return;
 
     const slides = await ApiService.getHeroSlides();
     const images = slides.length > 0 
         ? slides.map(s => `url("${s.image_data}")`)
         : [`url("https://images.unsplash.com/photo-1523240715630-991c2f746d24?auto=format&fit=crop&w=1200")`];
     
-    if(images.length > 0) hero.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), ${images[0]}`;
-
     let current = 0;
-    setInterval(() => {
-        current = (current + 1) % images.length;
+    let sliderTimer;
+
+    function updateSlider(index) {
+        current = index;
         hero.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), ${images[current]}`;
-    }, 5000);
+        
+        // Update dots
+        const dots = document.querySelectorAll('.dot');
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+        });
+    }
+
+    function startAutoSlide() {
+        sliderTimer = setInterval(() => {
+            updateSlider((current + 1) % images.length);
+        }, 5000);
+    }
+
+    // Create dots
+    dotsContainer.innerHTML = '';
+    images.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = `dot ${i === 0 ? 'active' : ''}`;
+        dot.onclick = () => {
+            clearInterval(sliderTimer);
+            updateSlider(i);
+            startAutoSlide();
+        };
+        dotsContainer.appendChild(dot);
+    });
+
+    updateSlider(0);
+    startAutoSlide();
 }
 
 async function loadSettings() {
@@ -51,26 +80,32 @@ async function loadAbout() {
 }
 
 async function loadEvents() {
-    const events = await ApiService.getEvents();
-    const container = document.getElementById('eventsContainer');
-    if(!container) return;
+    try {
+        const events = await ApiService.getEvents();
+        const container = document.getElementById('eventsContainer');
+        if(!container) return;
 
-    if(events.length === 0) {
-        container.innerHTML = "<p>Belum ada kegiatan terbaru.</p>";
-        return;
-    }
+        if(events.length === 0) {
+            container.innerHTML = "<p>Belum ada kegiatan terbaru.</p>";
+            return;
+        }
 
-    container.innerHTML = events.map(event => `
-        <div class="event-card" onclick="showEventDetail('${event.id}')">
-            <img src="${event.image || DEFAULT_IMG}" class="event-image">
-            <div class="event-content">
-                <span class="category-badge">${event.category || 'Umum'}</span>
-                <h4>${event.title}</h4>
-                <small>${formatDate(event.date)}</small>
-                <p>${event.desc.substring(0, 60)}...</p>
+        container.innerHTML = events.map(event => `
+            <div class="event-card" onclick="showEventDetail('${event.id}')">
+                <img src="${event.image || DEFAULT_IMG}" class="event-image">
+                <div class="event-content">
+                    <span class="category-badge">${event.category || 'Umum'}</span>
+                    <h4>${event.title}</h4>
+                    <small>${formatDate(event.date)}</small>
+                    <p>${event.desc ? event.desc.substring(0, 60) : ''}...</p>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `).join('');
+
+    } catch (error) {
+        console.error("Gagal memuat kegiatan:", error);
+        document.getElementById('eventsContainer').innerHTML = "<p>Gagal terhubung ke server.</p>";
+    }
 }
 
 async function loadStaff() {
@@ -109,7 +144,10 @@ async function loadGallery() {
     container.innerHTML = gallery.map(item => `
         <div class="gallery-item">
             <img src="${item.image}" class="gallery-image">
-            <div style="padding: 10px; text-align: center;">${item.caption || ''}</div>
+            <div class="gallery-overlay">
+                <i class="fas fa-search-plus" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
+                <p style="font-weight: 500;">${item.caption || 'IMAMA Gallery'}</p>
+            </div>
         </div>
     `).join('');
 }

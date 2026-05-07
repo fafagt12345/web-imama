@@ -1,25 +1,40 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const path = require('path');
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(express.static(__dirname)); // Melayani file statis (html, css, js)
+app.use(express.json({ limit: '50mb' }));
+
+// Melayani file statis dengan path yang lebih aman
+// Di Vercel, file statis di root akan otomatis dilayani. 
+// Baris ini tetap berguna untuk local development.
+app.use(express.static(path.join(__dirname, '.')));
+
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static('client/build'));
+}
 
 // Konfigurasi Koneksi Database
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '', // Kosongkan jika menggunakan XAMPP default
-    database: 'db_imama'
+const db = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'db_imama',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-db.connect(err => {
-    if (err) throw err;
-    console.log('MySQL Connected...');
+// Test koneksi database
+db.getConnection((err, connection) => {
+    if (err) console.error('Database connection failed:', err);
+    else {
+        console.log('MySQL Connected via Pool...');
+        connection.release();
+    }
 });
 
 // Route untuk halaman utama
@@ -208,7 +223,24 @@ app.post('/api/bulk-import', (req, res) => {
     res.json({ success: true });
 });
 
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+// Route: Login Admin
+app.post('/api/login', (req, res) => {
+    const { password } = req.body;
+    const adminPass = process.env.ADMIN_PASS || 'imama123'; // Ambil dari .env
+
+    if (password === adminPass) {
+        res.json({ success: true, message: "Login berhasil" });
+    } else {
+        res.status(401).json({ success: false, message: "Password salah" });
+    }
 });
+
+const PORT = process.env.PORT || 3000;
+
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app;

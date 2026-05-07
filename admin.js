@@ -1,5 +1,3 @@
-const PASS = "imama123";
-
 document.addEventListener('DOMContentLoaded', async () => {
     checkAuth();
     if(document.getElementById('aboutInput')) {
@@ -7,6 +5,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('aboutInput').value = aboutVal;
         loadSettingsToInputs();
         loadManagementLists();
+    }
+
+    // Fitur: Pratinjau gambar untuk upload slide hero
+    const heroImageInput = document.getElementById('heroImageInput');
+    const heroImagePreview = document.getElementById('heroImagePreview');
+    const heroFileName = document.getElementById('heroFileName');
+    const heroImagePreviewContainer = document.getElementById('heroImagePreviewContainer');
+
+    if (heroImageInput && heroImagePreview && heroFileName && heroImagePreviewContainer) {
+        heroImageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    heroImagePreview.src = e.target.result;
+                    heroFileName.textContent = file.name;
+                    heroImagePreviewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else { // Clear preview if no file selected
+                heroImagePreview.src = '#';
+                heroFileName.textContent = '';
+                heroImagePreviewContainer.style.display = 'none';
+            }
+        });
     }
 });
 
@@ -37,6 +60,12 @@ async function uploadHeroSlide() {
     console.log("Admin: Image data generated (length):", imageData.length);
     await ApiService.addHeroSlide(imageData);
     alert("Slide ditambahkan!");
+    
+    // Bersihkan input dan pratinjau setelah upload
+    document.getElementById('heroImageInput').value = ''; 
+    document.getElementById('heroImagePreview').src = '#';
+    document.getElementById('heroFileName').textContent = '';
+    document.getElementById('heroImagePreviewContainer').style.display = 'none';
     loadManagementLists();
 }
 
@@ -44,7 +73,8 @@ async function loadManagementLists() {
     const slides = await ApiService.getHeroSlides();
     document.getElementById('manageHeroSlides').innerHTML = slides.map(s => `
         <div class="manage-item">
-            <img src="${s.image_data}" style="height:40px; border-radius:4px;">
+            <img src="${s.image_data}" style="height:40px; border-radius:4px; margin-right: 10px;">
+            <span>Slide ID: ${s.id}</span>
             <button class="btn-delete" onclick="deleteHeroSlide(${s.id})">Hapus</button>
         </div>
     `).join('');
@@ -102,13 +132,23 @@ async function deleteGallery(id) {
     }
 }
 
-function handleLogin() {
+async function handleLogin() {
     const input = document.getElementById('adminPassword').value;
-    if(input === PASS) {
-        localStorage.setItem('imama_is_admin', 'true');
-        checkAuth();
-    } else {
-        alert("Password Salah!");
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: input })
+        });
+        const result = await response.json();
+        if (result.success) {
+            localStorage.setItem('imama_is_admin', 'true');
+            checkAuth();
+        } else {
+            alert("Password Salah!");
+        }
+    } catch (err) {
+        alert("Terjadi kesalahan koneksi ke server.");
     }
 }
 
