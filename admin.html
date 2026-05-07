@@ -72,6 +72,32 @@
       const [data, setData] = React.useState(stored);
       const [tab, setTab] = React.useState('hero');
 
+      // Fungsi untuk mengambil data terbaru dari database (Sinkronisasi Antar Device)
+      React.useEffect(() => {
+        if (auth) {
+          const fetchCurrentData = async () => {
+            try {
+              const raw = await ApiService.exportAll();
+              if (raw && Object.keys(raw).length > 0) {
+                setData(prev => ({
+                  ...prev,
+                  about: { ...prev.about, intro: raw.about?.[0]?.content || prev.about.intro },
+                  news: raw.events || prev.news,
+                  gallery: raw.gallery?.map(g => g.image_data) || prev.gallery,
+                  officers: raw.staff || prev.officers,
+                  // Masukkan mapping tabel lainnya di sini jika perlu
+                }));
+                setMessage('✓ Data tersinkronisasi dari Cloud');
+                setTimeout(() => setMessage(''), 3000);
+              }
+            } catch (err) {
+              console.error("Gagal mengambil data terbaru:", err);
+            }
+          };
+          fetchCurrentData();
+        }
+      }, [auth]);
+
       const handleLogin = async () => {
         try {
           const response = await fetch('/api/login', {
