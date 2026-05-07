@@ -8,6 +8,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.static(__dirname)); // Melayani file statis (html, css, js)
+app.use('/node_modules', express.static(path.join(__dirname, 'node_modules'))); // Serve node_modules for Speed Insights
 
 // Konfigurasi Koneksi Database
 const db = mysql.createConnection({
