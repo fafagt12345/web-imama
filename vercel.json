@@ -1,7 +1,11 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "public": ".",
   "rewrites": [
+    { "source": "/api/export-all", "destination": "/api/export-all.js" },
+    { "source": "/api/bulk-import", "destination": "/api/bulk-import.js" },
+    { "source": "/api/login", "destination": "/api/login.js" },
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/debug", "destination": "/debug.html" }
   ]
