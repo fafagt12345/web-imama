@@ -8,7 +8,8 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-app.use(express.static(__dirname));
+// Menggunakan path absolut untuk melayani file statis
+app.use(express.static(path.join(__dirname)));
 
 // Konfigurasi Koneksi Database
 const db = mysql.createPool({
