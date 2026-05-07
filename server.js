@@ -43,6 +43,82 @@ app.post('/api/login', (req, res) => {
     }
 });
 
+// API: Ambil semua data untuk sinkronisasi
+app.get('/api/export-all', (req, res) => {
+    const tables = ['about', 'settings', 'events', 'gallery', 'staff'];
+    const result = {};
+    let completed = 0;
+
+    tables.forEach(table => {
+        db.query(`SELECT * FROM ${table}`, (err, rows) => {
+            if (!err) result[table] = rows;
+            completed++;
+            if (completed === tables.length) res.json(result);
+        });
+    });
+});
+
+// API: Simpan/Import data secara massal ke MySQL
+app.post('/api/bulk-import', async (req, res) => {
+    const data = req.body;
+    
+    try {
+        // 1. Update About (Content)
+        if (data.about) {
+            const aboutText = typeof data.about === 'string' ? data.about : (data.about.intro || '');
+            db.query('UPDATE about SET content = ? WHERE id = 1', [aboutText]);
+        }
+
+        // 2. Update Settings (Hero & Contact)
+        const settingsMap = [
+            ['email', data.contact?.email],
+            ['instagram', data.contact?.instagram],
+            ['hero_title', data.hero?.title],
+            ['hero_subtitle', data.hero?.subtitle]
+        ];
+        settingsMap.forEach(([key, val]) => {
+            if (val) db.query('REPLACE INTO settings (s_key, s_value) VALUES (?, ?)', [key, val]);
+        });
+
+        // 3. Sync Events (News)
+        if (data.events || data.news) {
+            const events = data.events || data.news;
+            db.query('DELETE FROM events', () => {
+                if (events.length > 0) {
+                    const vals = events.map(e => [e.title, e.category || 'Umum', e.desc || e.description || '', e.date || e.event_date, e.image || e.image_data]);
+                    db.query('INSERT INTO events (title, category, description, event_date, image_data) VALUES ?', [vals]);
+                }
+            });
+        }
+
+        // 4. Sync Staff (Officers)
+        if (data.staff || data.officers) {
+            const staff = data.staff || data.officers;
+            db.query('DELETE FROM staff', () => {
+                if (staff.length > 0) {
+                    const vals = staff.map(s => [s.name, s.role || s.position, s.dept || s.department, s.image || s.image_data]);
+                    db.query('INSERT INTO staff (name, position, department, image_data) VALUES ?', [vals]);
+                }
+            });
+        }
+
+        // 5. Sync Gallery
+        if (data.gallery) {
+            db.query('DELETE FROM gallery', () => {
+                if (data.gallery.length > 0) {
+                    const vals = data.gallery.map(img => [typeof img === 'string' ? img : img.image_data, '']);
+                    db.query('INSERT INTO gallery (image_data, caption) VALUES ?', [vals]);
+                }
+            });
+        }
+
+        res.json({ success: true, message: "Data berhasil disimpan ke Database MySQL" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Route untuk halaman utama
 app.get('/', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'index.html'));

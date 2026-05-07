@@ -72,6 +72,34 @@
       const [data, setData] = React.useState(stored);
       const [tab, setTab] = React.useState('hero');
 
+      // SINKRONISASI: Ambil data terbaru dari MySQL saat masuk
+      React.useEffect(() => {
+        if (auth) {
+          const loadFromDB = async () => {
+            try {
+              const remoteData = await ApiService.exportAll();
+              if (remoteData && Object.keys(remoteData).length > 0) {
+                const merged = {
+                  ...defaultData,
+                  ...remoteData,
+                  // Mapping balik dari tabel DB ke state React
+                  about: { ...defaultData.about, intro: remoteData.about?.[0]?.content || defaultData.about.intro },
+                  news: remoteData.events?.map(e => ({ ...e, desc: e.description, date: e.event_date, image: e.image_data })) || defaultData.news,
+                  officers: remoteData.staff?.map(s => ({ ...s, role: s.position, dept: s.department, image: s.image_data })) || defaultData.officers,
+                  gallery: remoteData.gallery?.map(g => g.image_data) || defaultData.gallery
+                };
+                setData(merged);
+                localStorage.setItem('imamaSiteData', JSON.stringify(merged));
+                setMessage('✓ Data berhasil disinkronkan dari database');
+              }
+            } catch (err) {
+              setMessage('⚠️ Gagal sinkronisasi otomatis, menggunakan data lokal.');
+            }
+          };
+          loadFromDB();
+        }
+      }, [auth]);
+
       const handleLogin = async () => {
         try {
           const response = await fetch('/api/login', {
