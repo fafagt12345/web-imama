@@ -72,14 +72,55 @@
       const [data, setData] = React.useState(stored);
       const [tab, setTab] = React.useState('hero');
 
-      const handleLogin = () => {
-        if (password === 'imama123') {
-          localStorage.setItem('imamaAdmin', 'true');
-          setAuth(true);
-          setMessage('Login berhasil');
-          setTimeout(() => setMessage(''), 2000);
-        } else {
-          setMessage('Password salah!');
+      // SINKRONISASI: Ambil data terbaru dari MySQL saat admin login
+      React.useEffect(() => {
+        if (auth) {
+          const loadFromDB = async () => {
+            setMessage('⏳ Mengambil data terbaru dari Cloud...');
+            try {
+              const remoteData = await ApiService.exportAll();
+              if (remoteData && Object.keys(remoteData).length > 0) {
+                const merged = {
+                  ...defaultData,
+                  // Mapping dari format DB ke format state React
+                  about: { ...defaultData.about, intro: remoteData.about?.[0]?.content || defaultData.about.intro },
+                  hero: { ...defaultData.hero, title: remoteData.settings?.hero_title || defaultData.hero.title, subtitle: remoteData.settings?.hero_subtitle || defaultData.settings?.hero_subtitle || defaultData.hero.subtitle },
+                  news: remoteData.events?.map(e => ({ ...e, desc: e.description, date: e.event_date, image: e.image_data })) || defaultData.news,
+                  officers: remoteData.staff?.map(s => ({ ...s, role: s.position, dept: s.department, image: s.image_data })) || defaultData.officers,
+                  gallery: remoteData.gallery?.map(g => g.image_data) || defaultData.gallery,
+                  timeline: remoteData.timeline || defaultData.timeline,
+                  contact: { ...defaultData.contact, email: remoteData.settings?.email || defaultData.contact.email, instagram: remoteData.settings?.instagram || defaultData.contact.instagram }
+                };
+                setData(merged);
+                localStorage.setItem('imamaSiteData', JSON.stringify(merged)); // Simpan juga ke lokal sebagai cache
+                setMessage('✓ Data berhasil disinkronkan dari Cloud.');
+              }
+            } catch (err) {
+              setMessage('⚠️ Gagal sinkronisasi otomatis dari Cloud. Menggunakan data lokal.');
+            } finally { setTimeout(() => setMessage(''), 3000); }
+          };
+          loadFromDB();
+        }
+      }, [auth]); // Jalankan hanya saat status auth berubah
+
+      const handleLogin = async () => {
+        try {
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+          });
+          const result = await response.json();
+          
+          if (result.success) {
+            localStorage.setItem('imamaAdmin', 'true');
+            setAuth(true);
+            setMessage('✓ Login berhasil');
+          } else {
+            setMessage('❌ ' + (result.message || 'Password salah!'));
+          }
+        } catch (err) {
+          setMessage('Gagal terhubung ke server login');
         }
       };
 
@@ -153,10 +194,14 @@
             reader.onload = (event) => {
               try {
                 const imported = JSON.parse(event.target.result);
-                setData(imported);
-                localStorage.setItem('imamaSiteData', JSON.stringify(imported));
-                setMessage('✓ Data berhasil diimport! Refresh halaman utama untuk melihat.');
-                setTimeout(() => setMessage(''), 3000);
+                setMessage('⏳ Menyinkronkan data...');
+                
+                ApiService.bulkImport(imported).then(() => {
+                  setData(imported);
+                  localStorage.setItem('imamaSiteData', JSON.stringify(imported));
+                  setMessage('✓ Data berhasil disinkronkan ke Cloud!');
+                  setTimeout(() => location.reload(), 1500);
+                });
               } catch (err) {
                 setMessage('❌ File JSON tidak valid: ' + err.message);
               }
