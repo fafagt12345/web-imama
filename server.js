@@ -28,16 +28,6 @@ const db = mysql.createPool({
     queueLimit: 0
 });
 
-// Route Login Admin
-app.post('/api/login', (req, res) => {
-    const { password } = req.body;
-    if (password === (process.env.ADMIN_PASS || 'imama123')) {
-        res.json({ success: true });
-    } else {
-        res.status(401).json({ success: false, message: 'Password salah' });
-    }
-});
-
 // Test koneksi database
 db.getConnection((err, connection) => {
     if (err) console.error('Database connection failed:', err);
@@ -275,14 +265,13 @@ app.post('/api/bulk-import', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         res.status(500).send(err);
-    });
+    }
 });
 
-// Route: Login Admin
+// Route Login Admin
 app.post('/api/login', (req, res) => {
     const { password } = req.body;
-    const adminPass = process.env.ADMIN_PASS || 'imama123'; // Ambil dari .env
-
+    const adminPass = process.env.ADMIN_PASS || 'imama123';
     if (password === adminPass) {
         res.json({ success: true, message: "Login berhasil" });
     } else {
