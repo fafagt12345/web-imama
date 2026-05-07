@@ -8,14 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// Melayani file statis dengan path yang lebih aman
-// Di Vercel, file statis di root akan otomatis dilayani. 
-// Baris ini tetap berguna untuk local development.
-app.use(express.static(path.join(__dirname, '.')));
-
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static('client/build'));
-}
+app.use(express.static(__dirname));
 
 // Konfigurasi Koneksi Database
 const db = mysql.createPool({
