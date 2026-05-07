@@ -21,6 +21,14 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    // Check if environment variables are set
+    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Database environment variables not configured. Please set DB_HOST, DB_USER, DB_PASSWORD, DB_NAME in Vercel.' 
+      });
+    }
+
     const aboutRows = await queryRows('SELECT * FROM about LIMIT 1');
     const settings = await queryRows('SELECT s_key, s_value FROM settings');
     const hero_slides = await queryRows('SELECT * FROM hero_slides ORDER BY created_at DESC');
@@ -32,7 +40,7 @@ module.exports = async function handler(req, res) {
     settings.forEach(row => { settingsObj[row.s_key] = row.s_value; });
     res.status(200).json({ about: aboutRows[0] || { intro: '', history: '', logo: '', philosophy: '', vision: '' }, settings: settingsObj, hero_slides, events, gallery, staff, timeline });
   } catch (err) {
-    console.error(err);
+    console.error('[export-all error]', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 };
