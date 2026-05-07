@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMAMA UNESA - Ikatan Mahasiswa Manajemen Akuntansi</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>IMAMA UNESA</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#home" class="nav-link">Beranda</a>
+                <a href="#about" class="nav-link">Tentang</a>
+                <a href="#events" class="nav-link">Kegiatan</a>
+                <a href="#staff" class="nav-link">Pengurus</a>
+                <a href="#gallery" class="nav-link">Galeri</a>
+                <a href="#contact" class="nav-link">Kontak</a>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 id="heroTitleDisplay">IMAMA UNESA</h1>
+            <p id="heroSubtitleDisplay">Ikatan Mahasiswa Manajemen Akuntansi<br>Universitas Negeri Surabaya</p>
+            <a href="#events" class="cta-btn">Lihat Kegiatan</a>
+        </div>
+        <div class="hero-dots" id="heroDots"></div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <h2>Tentang Kami</h2>
+            <div id="aboutContent" style="text-align: center; max-width: 800px; margin: 0 auto;"></div>
+        </div>
+    </section>
+
+    <section id="events" class="events">
+        <div class="container">
+            <h2>Kegiatan Terbaru</h2>
+            <div class="events-slider-wrapper">
+                <button class="slider-arrow prev" onclick="moveEventSlider(-1)"><i class="fas fa-chevron-left"></i></button>
+                <div id="eventsContainer" class="events-slider"></div>
+                <button class="slider-arrow next" onclick="moveEventSlider(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <section id="staff" class="staff">
+        <div class="container">
+            <h2>Struktur Pengurus</h2>
+            <div id="staffContainer"></div>
+        </div>
+    </section>
+
+    <section id="gallery" class="gallery">
+        <div class="container">
+            <h2>Galeri</h2>
+            <div id="galleryContainer" class="gallery-grid"></div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>Hubungi Kami</h2>
+            <div style="text-align: center;">
+                <p><i class="fas fa-envelope"></i> <span id="displayEmail"></span></p>
+                <p><i class="fab fa-instagram"></i> @<span id="displayIg"></span></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Detail Kegiatan -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('eventModal').style.display='none'">&times;</span>
+            <div id="eventModalBody"></div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

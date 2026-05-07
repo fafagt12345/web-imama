@@ -1,90 +1,342 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IMAMA UNESA - Ikatan Mahasiswa Manajemen Akuntansi</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IMAMA Magetan UNESA</title>
+  <meta name="description" content="Website resmi IMAMA Magetan UNESA - organisasi mahasiswa modern dengan nuansa Magetan dan solidaritas rantau." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          boxShadow: {
+            glow: '0 30px 120px rgba(16, 185, 129, 0.18)'
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { font-family: Inter, system-ui, sans-serif; background: #f8fafc; }
+    .glass-card { background: rgba(255,255,255,0.78); backdrop-filter: blur(12px); }
+    .hero-bg { background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.25)), url('https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1600&q=80'); }
+    .modal-fade { transition: opacity 0.25s ease; }
+  </style>
 </head>
-<body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <i class="fas fa-graduation-cap"></i>
-                <span>IMAMA UNESA</span>
+<body class="text-slate-900">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const defaultData = {
+      hero: {
+        title: 'Membangun Solidaritas Mahasiswa Magetan di Universitas Negeri Surabaya',
+        subtitle: 'IMAMA Magetan UNESA hadir untuk memperkuat rasa kekeluargaan, profesionalisme, dan semangat rantau di Surabaya.',
+        ctaPrimary: 'Gabung IMAMA',
+        ctaSecondary: 'Lihat Kegiatan'
+      },
+      about: {
+        intro: 'IMAMA Magetan UNESA adalah wadah aspirasi dan solidaritas mahasiswa Magetan yang menuntut ilmu di Universitas Negeri Surabaya. Kami bergerak dalam kegiatan pengembangan organisasi, sosial, akademik, dan budaya rantau.',
+        history: 'Bermula dari kumpulan mahasiswa rantau Magetan yang ingin menyatukan tekad dan budaya, IMAMA lahir sebagai identitas kebersamaan untuk berbagi kekuatan selama studi.',
+        logo: 'Logo IMAMA merepresentasikan dua sisi: akar Magetan yang kuat dan ruang gerak inovasi di dunia kampus.',
+        philosophy: 'Filosofi kami adalah “Rantau Terikat, Karya Terbuka” — menjaga nilai keluarga asal, sambil berkembang bersama dalam kebersamaan akademik.',
+        vision: 'Menjadi organisasi mahasiswa Magetan yang progresif, aktif, dan menjadi inspirasi solidaritas rantau di lingkungan kampus.'
+      },
+      departments: [
+        { name: 'BPH', color: 'from-emerald-500 to-emerald-700', desc: 'Koordinasi strategis dan penguatan organisasi.', leader: 'Ahmad Fulan', members: 42, icon: '🛡️' },
+        { name: 'DPM', color: 'from-slate-500 to-slate-700', desc: 'Pengawasan dan kebijakan internal.', leader: 'Nadia Hapsari', members: 18, icon: '📜' },
+        { name: 'DBM', color: 'from-amber-400 to-amber-600', desc: 'Keuangan organisasi dan pendanaan kegiatan.', leader: 'Rian Pratama', members: 16, icon: '💰' },
+        { name: 'DPO', color: 'from-cyan-500 to-cyan-700', desc: 'Pengabdian masyarakat dan event sosial.', leader: 'Siti Anisa', members: 24, icon: '🤝' },
+        { name: 'EKRAF', color: 'from-pink-500 to-pink-700', desc: 'Kegiatan kreatif dan seni budaya.', leader: 'Lina Kartika', members: 20, icon: '🎨' },
+        { name: 'INFOKOM', color: 'from-violet-500 to-violet-700', desc: 'Komunikasi digital dan dokumentasi.', leader: 'Dio Prasetyo', members: 26, icon: '💡' },
+        { name: 'KORWIL', color: 'from-emerald-300 to-emerald-500', desc: 'Koordinasi wilayah dan jaringan rantau.', leader: 'Maya Lestari', members: 30, icon: '🌍' }
+      ],
+      officers: [
+        { name: 'Ahmad Fulan', role: 'Ketua Umum', major: 'Teknik Informatika', batch: '2024', dept: 'BPH', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&w=600&q=80' },
+        { name: 'Nadia Hapsari', role: 'Sekretaris', major: 'Manajemen', batch: '2024', dept: 'DPM', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80' },
+        { name: 'Rian Pratama', role: 'Bendahara', major: 'Akuntansi', batch: '2024', dept: 'DBM', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80' }
+      ],
+      programs: [
+        { title: 'Makrab Solidaritas', icon: '🔥', text: 'Gathering hangat untuk memperkuat ikatan rantau dan networking.' },
+        { title: 'Bakti Sosial', icon: '🌱', text: 'Aksi sosial untuk masyarakat Magetan dan lingkungan Surabaya.' },
+        { title: 'Seminar Alumni', icon: '🎙️', text: 'Sharing inspiratif bersama alumni sukses kampus dan rantau.' },
+        { title: 'Kajian Mahasiswa', icon: '📚', text: 'Diskusi akademik dan spiritual intensif bersama anggota.' }
+      ],
+      news: [
+        { title: 'Pelatihan Kepemimpinan Rantau', date: 'Mei 2025', category: 'Program Kerja', image: 'https://images.unsplash.com/photo-1515162305289-2c51f1d9e5f2?auto=format&fit=crop&w=800&q=80' },
+        { title: 'Festival Kebudayaan Magetan', date: 'Juni 2025', category: 'Event', image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80' }
+      ],
+      gallery: [
+        'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1485217988980-11786ced9454?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=800&q=80'
+      ],
+      timeline: [
+        { year: '2020', event: 'IMAMA berdiri sebagai organisasi mahasiswa rantau Magetan di UNESA.' },
+        { year: '2022', event: 'Pelantikan kepengurusan dan perluasan program bakti sosial.' },
+        { year: '2024', event: 'Pencapaian membership 200+ dan penguatan visi baru.' }
+      ],
+      contact: {
+        whatsapp: '+6281234567890',
+        instagram: 'imama.magetan',
+        email: 'admin@imamaunesa.org',
+        address: 'Sekretariat IMAMA UNESA, Surabaya'
+      },
+      stats: [
+        { label: 'Anggota Aktif', value: '200+' },
+        { label: 'Departemen', value: '7' },
+        { label: 'Kegiatan', value: '35' },
+        { label: 'Alumni', value: '150+' }
+      ]
+    };
+
+    const savedData = localStorage.getItem('imamaSiteData');
+    const siteData = savedData ? JSON.parse(savedData) : defaultData;
+
+    const SectionTitle = ({ title, subtitle }) => (
+      <div className="text-center mb-10">
+        <p className="text-emerald-600 font-semibold uppercase tracking-[0.3em]">{title}</p>
+        <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-slate-900">{subtitle}</h2>
+      </div>
+    );
+
+    const DepartmentCard = ({ dept }) => (
+      <div className={`p-6 rounded-3xl shadow-glow border border-white/80 transform transition hover:-translate-y-2 ${dept.color}`} style={{ backgroundImage: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(255,255,255,0.2))' }}>
+        <div className="text-3xl mb-4">{dept.icon}</div>
+        <div className="font-semibold text-xl mb-2">{dept.name}</div>
+        <p className="text-slate-700 mb-4">{dept.desc}</p>
+        <p className="text-sm text-slate-600">Ketua: <strong>{dept.leader}</strong></p>
+        <p className="text-sm text-slate-600">Anggota: <strong>{dept.members}</strong></p>
+      </div>
+    );
+
+    const OfficerCard = ({ officer, onClick }) => (
+      <div className="bg-white rounded-3xl shadow-xl overflow-hidden hover:-translate-y-2 transform transition cursor-pointer" onClick={() => onClick(officer)}>
+        <img src={officer.image} alt={officer.name} className="w-full h-64 object-cover" />
+        <div className="p-6">
+          <p className="text-sm uppercase tracking-[0.2em] text-emerald-600 mb-2">{officer.dept}</p>
+          <h3 className="text-xl font-semibold mb-1">{officer.name}</h3>
+          <p className="text-slate-600">{officer.role}</p>
+          <p className="mt-3 text-sm text-slate-500">{officer.major} • Angkatan {officer.batch}</p>
+        </div>
+      </div>
+    );
+
+    const Modal = ({ detail, onClose }) => {
+      if (!detail) return null;
+      return (
+        <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center p-6 z-50">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-slate-200">
+              <div>
+                <h3 className="text-xl font-bold">{detail.name}</h3>
+                <p className="text-slate-500">{detail.role} • {detail.dept}</p>
+              </div>
+              <button className="text-slate-500 hover:text-slate-900" onClick={onClose}>Tutup</button>
             </div>
-            <div class="nav-menu">
-                <a href="#home" class="nav-link">Beranda</a>
-                <a href="#about" class="nav-link">Tentang</a>
-                <a href="#events" class="nav-link">Kegiatan</a>
-                <a href="#staff" class="nav-link">Pengurus</a>
-                <a href="#gallery" class="nav-link">Galeri</a>
-                <a href="#contact" class="nav-link">Kontak</a>
+            <div className="p-6 grid gap-4 sm:grid-cols-2">
+              <img src={detail.image} alt={detail.name} className="rounded-3xl w-full h-72 object-cover" />
+              <div className="space-y-4">
+                <p className="text-slate-700">Program studi: <strong>{detail.major}</strong></p>
+                <p className="text-slate-700">Angkatan: <strong>{detail.batch}</strong></p>
+                <p className="text-slate-700">Jabatan: <strong>{detail.role}</strong></p>
+                <p className="text-slate-500">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus id tortor at purus eleifend venenatis.</p>
+              </div>
             </div>
+          </div>
         </div>
-    </nav>
+      );
+    };
 
-    <section id="home" class="hero">
-        <div class="hero-content">
-            <h1 id="heroTitleDisplay">IMAMA UNESA</h1>
-            <p id="heroSubtitleDisplay">Ikatan Mahasiswa Manajemen Akuntansi<br>Universitas Negeri Surabaya</p>
-            <a href="#events" class="cta-btn">Lihat Kegiatan</a>
-        </div>
-        <div class="hero-dots" id="heroDots"></div>
-    </section>
+    function App() {
+      const [profile, setProfile] = React.useState(null);
+      const [galleryOpen, setGalleryOpen] = React.useState(null);
 
-    <section id="about" class="about">
-        <div class="container">
-            <h2>Tentang Kami</h2>
-            <div id="aboutContent" style="text-align: center; max-width: 800px; margin: 0 auto;"></div>
-        </div>
-    </section>
-
-    <section id="events" class="events">
-        <div class="container">
-            <h2>Kegiatan Terbaru</h2>
-            <div class="events-slider-wrapper">
-                <button class="slider-arrow prev" onclick="moveEventSlider(-1)"><i class="fas fa-chevron-left"></i></button>
-                <div id="eventsContainer" class="events-slider"></div>
-                <button class="slider-arrow next" onclick="moveEventSlider(1)"><i class="fas fa-chevron-right"></i></button>
+      return (
+        <div className="min-h-screen overflow-x-hidden">
+          <header className="fixed inset-x-0 top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-slate-200">
+            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
+              <a href="#home" className="text-lg font-bold text-slate-900">IMAMA Magetan</a>
+              <nav className="hidden md:flex items-center gap-6 text-slate-700">
+                {['Home', 'Tentang', 'Departemen', 'Pengurus', 'Kegiatan', 'Galeri', 'Timeline', 'Kontak'].map(item => (
+                  <a key={item} href={`#${item.toLowerCase()}`} className="hover:text-emerald-700 transition">{item}</a>
+                ))}
+                <a href="/admin.html" className="rounded-full border border-emerald-600 px-4 py-2 text-emerald-700 hover:bg-emerald-600 hover:text-white transition">Admin</a>
+              </nav>
+              <a href="/admin.html" className="md:hidden text-emerald-700 font-semibold">Admin</a>
             </div>
-        </div>
-    </section>
+          </header>
 
-    <section id="staff" class="staff">
-        <div class="container">
-            <h2>Struktur Pengurus</h2>
-            <div id="staffContainer"></div>
-        </div>
-    </section>
+          <main className="pt-24">
+            <section id="home" className="hero-bg bg-cover bg-center text-white min-h-[88vh] flex items-center">
+              <div className="max-w-6xl mx-auto px-6 flex flex-col gap-8">
+                <div className="glass-card rounded-[36px] p-10 shadow-glow border border-white/30">
+                  <span className="inline-flex items-center gap-2 text-emerald-200 uppercase tracking-[0.35em] text-sm mb-4">IMAMA Magetan</span>
+                  <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight">{siteData.hero.title}</h1>
+                  <p className="mt-6 max-w-2xl text-slate-100 leading-relaxed text-lg">{siteData.hero.subtitle}</p>
+                  <div className="mt-10 flex flex-col sm:flex-row gap-4">
+                    <a href="#departemen" className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-8 py-4 text-base font-semibold shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 transition">{siteData.hero.ctaPrimary}</a>
+                    <a href="#kegiatan" className="inline-flex items-center justify-center rounded-full border border-white/60 bg-white/15 px-8 py-4 text-base font-semibold text-white hover:bg-white/25 transition">{siteData.hero.ctaSecondary}</a>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-    <section id="gallery" class="gallery">
-        <div class="container">
-            <h2>Galeri</h2>
-            <div id="galleryContainer" class="gallery-grid"></div>
-        </div>
-    </section>
+            <section id="tentang" className="max-w-7xl mx-auto px-6 py-24">
+              <SectionTitle title="Tentang IMAMA" subtitle="Organisasi mahasiswa rantau yang bernilai modern dan solid." />
+              <div className="grid gap-8 lg:grid-cols-2">
+                <div className="glass-card rounded-[32px] p-8 shadow-lg border border-slate-200/80">
+                  <h3 className="text-xl font-semibold mb-4">Tentang Kami</h3>
+                  <p className="text-slate-700 leading-relaxed">{siteData.about.intro}</p>
+                </div>
+                <div className="grid gap-6">
+                  {['Sejarah organisasi', 'Makna logo', 'Filosofi organisasi', 'Visi & Misi'].map((label, idx) => (
+                    <div key={label} className="glass-card rounded-[28px] p-6 shadow-lg border border-slate-200/80">
+                      <h4 className="font-semibold text-lg mb-3">{label}</h4>
+                      <p className="text-slate-600 leading-relaxed">
+                        {idx === 0 ? siteData.about.history : idx === 1 ? siteData.about.logo : idx === 2 ? siteData.about.philosophy : siteData.about.vision}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
 
-    <section id="contact" class="contact">
-        <div class="container">
-            <h2>Hubungi Kami</h2>
-            <div style="text-align: center;">
-                <p><i class="fas fa-envelope"></i> <span id="displayEmail"></span></p>
-                <p><i class="fab fa-instagram"></i> @<span id="displayIg"></span></p>
+            <section id="departemen" className="bg-slate-50 py-24">
+              <div className="max-w-7xl mx-auto px-6">
+                <SectionTitle title="Departemen IMAMA" subtitle="Struktur kerja yang modern dan responsif." />
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  {siteData.departments.map(dept => <DepartmentCard key={dept.name} dept={dept} />)}
+                </div>
+              </div>
+            </section>
+
+            <section id="pengurus" className="max-w-7xl mx-auto px-6 py-24">
+              <SectionTitle title="Struktur Pengurus" subtitle="Pengurus dikelompokkan dengan profil modern." />
+              <div className="grid gap-6 lg:grid-cols-3">
+                {siteData.officers.map(officer => <OfficerCard key={officer.name} officer={officer} onClick={setProfile} />)}
+              </div>
+            </section>
+
+            <section id="program" className="bg-emerald-950 text-white py-24">
+              <div className="max-w-7xl mx-auto px-6">
+                <SectionTitle title="Program Kerja" subtitle="Rangkaian kegiatan untuk mahasiswa Magetan rantau." />
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                  {siteData.programs.map(item => (
+                    <div key={item.title} className="glass-card rounded-[32px] p-8 border border-white/15 shadow-xl hover:-translate-y-2 transition">
+                      <div className="text-4xl mb-4">{item.icon}</div>
+                      <h4 className="text-xl font-semibold mb-2">{item.title}</h4>
+                      <p className="text-slate-100/90 leading-relaxed">{item.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <section id="kegiatan" className="max-w-7xl mx-auto px-6 py-24">
+              <SectionTitle title="Kegiatan Terbaru" subtitle="Berita dan artikel kegiatan yang aktif." />
+              <div className="grid gap-6 lg:grid-cols-2">
+                {siteData.news.map(item => (
+                  <article key={item.title} className="glass-card rounded-[32px] overflow-hidden shadow-glow border border-slate-200/80 hover:-translate-y-2 transition">
+                    <img src={item.image} className="w-full h-72 object-cover" alt={item.title} />
+                    <div className="p-8">
+                      <span className="inline-flex px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm mb-4">{item.category}</span>
+                      <h3 className="text-2xl font-semibold mb-3">{item.title}</h3>
+                      <p className="text-slate-600">{item.date}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section id="galeri" className="bg-slate-50 py-24">
+              <div className="max-w-7xl mx-auto px-6">
+                <SectionTitle title="Galeri Dokumentasi" subtitle="Momen kegiatan IMAMA Magetan dalam tampilan visual yang hidup." />
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {siteData.gallery.map((src, index) => (
+                    <button key={index} className="group overflow-hidden rounded-[32px] shadow-xl bg-white" onClick={() => setGalleryOpen(src)}>
+                      <img src={src} alt={`Galeri ${index + 1}`} className="w-full h-72 object-cover transition duration-700 group-hover:scale-105" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <section id="timeline" className="max-w-7xl mx-auto px-6 py-24">
+              <SectionTitle title="Timeline Perjalanan" subtitle="Tonggak penting perjalanan IMAMA Magetan." />
+              <div className="space-y-6">
+                {siteData.timeline.map(item => (
+                  <div key={item.year} className="glass-card rounded-[28px] p-8 border border-slate-200/80 shadow-xl">
+                    <div className="flex items-center gap-6">
+                      <div className="text-emerald-600 text-3xl font-bold">{item.year}</div>
+                      <p className="text-slate-700">{item.event}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section id="statistik" className="bg-emerald-950 text-white py-24">
+              <div className="max-w-7xl mx-auto px-6">
+                <SectionTitle title="Statistik Organisasi" subtitle="Angka yang menunjukkan kekuatan dan aktivitas IMAMA." />
+                <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+                  {siteData.stats.map(item => (
+                    <div key={item.label} className="glass-card rounded-[32px] p-8 border border-white/10 shadow-xl">
+                      <p className="text-4xl font-bold mb-3">{item.value}</p>
+                      <p className="text-slate-200">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <section id="kontak" className="max-w-7xl mx-auto px-6 py-24">
+              <SectionTitle title="Contact & Sosial Media" subtitle="Cara cepat terhubung dengan IMAMA Magetan." />
+              <div className="grid gap-8 lg:grid-cols-2">
+                <div className="glass-card rounded-[32px] p-10 shadow-lg border border-slate-200/80">
+                  <h3 className="text-2xl font-semibold mb-6">Hubungi Kami</h3>
+                  <p className="text-slate-700 mb-3"><strong>WhatsApp:</strong> {siteData.contact.whatsapp}</p>
+                  <p className="text-slate-700 mb-3"><strong>Instagram:</strong> @{siteData.contact.instagram}</p>
+                  <p className="text-slate-700 mb-3"><strong>Email:</strong> {siteData.contact.email}</p>
+                  <p className="text-slate-700"><strong>Lokasi:</strong> {siteData.contact.address}</p>
+                </div>
+                <div className="bg-emerald-600 rounded-[32px] p-10 text-white shadow-glow">
+                  <h3 className="text-2xl font-semibold mb-4">Quote Mahasiswa Rantau</h3>
+                  <p className="leading-relaxed">"Rantau ini bukan hanya jarak, tetapi kesempatan kami untuk membangun solidaritas, prestasi, dan identitas Magetan di kampus besar."</p>
+                </div>
+              </div>
+            </section>
+          </main>
+
+          <footer className="bg-slate-900 text-slate-300 py-10">
+            <div className="max-w-7xl mx-auto px-6 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-semibold text-white">IMAMA Magetan UNESA</p>
+                <p className="mt-2 text-slate-400">Modern, ramah mahasiswa, dan siap tampil sebagai organisasi profesional.</p>
+              </div>
+              <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+                <a href="#home" className="hover:text-white">Beranda</a>
+                <a href="#kontak" className="hover:text-white">Kontak</a>
+                <a href="/admin.html" className="hover:text-white">Admin</a>
+              </div>
             </div>
-        </div>
-    </section>
+          </footer>
 
-    <!-- Modal Detail Kegiatan -->
-    <div id="eventModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="document.getElementById('eventModal').style.display='none'">&times;</span>
-            <div id="eventModalBody"></div>
+          {profile && <Modal detail={profile} onClose={() => setProfile(null)} />}
+          {galleryOpen && (
+            <div className="fixed inset-0 z-50 bg-slate-900/90 flex items-center justify-center p-6" onClick={() => setGalleryOpen(null)}>
+              <img src={galleryOpen} alt="Preview galeri" className="max-h-[90vh] rounded-3xl shadow-2xl" />
+            </div>
+          )}
         </div>
-    </div>
+      );
+    }
 
-    <script src="api.js"></script>
-    <script src="script.js"></script>
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>

@@ -1,105 +1,165 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - IMAMA UNESA</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin IMAMA Magetan</title>
+  <meta name="description" content="Dashboard admin IMAMA Magetan untuk edit konten situs secara mudah." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { boxShadow: { glow: '0 30px 120px rgba(16, 185, 129, 0.18)' } } } };
+  </script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>body { font-family: Inter, system-ui, sans-serif; background: #f8fafc; }</style>
 </head>
-<body class="admin-body">
-    
-    <!-- Login Form -->
-    <div id="loginSection" class="login-container">
-        <h2><i class="fas fa-lock"></i> Login Admin</h2>
-        <input type="password" id="adminPassword" placeholder="Masukkan Password">
-        <button onclick="handleLogin()" style="width: 100%;">Masuk</button>
-    </div>
+<body>
+  <div id="admin-root"></div>
 
-    <!-- Admin Dashboard -->
-    <div id="adminDashboard" class="admin-dashboard container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h1>Panel Kendali IMAMA</h1>
-            <button onclick="handleLogout()" class="logout-btn">Logout</button>
-        </div>
+  <script type="text/babel">
+    const defaultData = {
+      hero: {
+        title: 'Membangun Solidaritas Mahasiswa Magetan di Universitas Negeri Surabaya',
+        subtitle: 'IMAMA Magetan UNESA hadir untuk memperkuat rasa kekeluargaan, profesionalisme, dan semangat rantau di Surabaya.',
+        ctaPrimary: 'Gabung IMAMA',
+        ctaSecondary: 'Lihat Kegiatan'
+      },
+      about: {
+        intro: 'IMAMA Magetan UNESA adalah wadah aspirasi dan solidaritas mahasiswa Magetan yang menuntut ilmu di Universitas Negeri Surabaya. Kami bergerak dalam kegiatan pengembangan organisasi, sosial, akademik, dan budaya rantau.',
+        history: 'Bermula dari kumpulan mahasiswa rantau Magetan yang ingin menyatukan tekad dan budaya, IMAMA lahir sebagai identitas kebersamaan untuk berbagi kekuatan selama studi.',
+        logo: 'Logo IMAMA merepresentasikan dua sisi: akar Magetan yang kuat dan ruang gerak inovasi di dunia kampus.',
+        philosophy: 'Filosofi kami adalah “Rantau Terikat, Karya Terbuka” — menjaga nilai keluarga asal, sambil berkembang bersama dalam kebersamaan akademik.',
+        vision: 'Menjadi organisasi mahasiswa Magetan yang progresif, aktif, dan menjadi inspirasi solidaritas rantau di lingkungan kampus.'
+      },
+      contact: {
+        whatsapp: '+6281234567890',
+        instagram: 'imama.magetan',
+        email: 'admin@imamaunesa.org',
+        address: 'Sekretariat IMAMA UNESA, Surabaya'
+      }
+    };
 
-        <div class="admin-card">
-            <h3><i class="fas fa-cog"></i> Pengaturan Website</h3>
-            <input type="text" id="setHeroTitle" placeholder="Judul Hero (Besar)">
-            <input type="text" id="setHeroSubtitle" placeholder="Sub-judul Hero">
-            <input type="email" id="setEmail" placeholder="Email Kontak">
-            <input type="text" id="setIg" placeholder="Username Instagram">
-            <button onclick="saveSettings()">Simpan Pengaturan</button>
-        </div>
+    const savedData = localStorage.getItem('imamaSiteData');
+    const stored = savedData ? JSON.parse(savedData) : defaultData;
 
-        <div class="admin-card">
-            <h3><i class="fas fa-images"></i> Kelola Slide Hero</h3>
-            <p><small>Gambar ini akan muncul bergantian di halaman depan.</small></p>
-            <input type="file" id="heroImageInput" accept="image/*">
-            <div id="heroImagePreviewContainer" style="margin-top: 10px; display: none; text-align: center;">
-                <img id="heroImagePreview" src="#" alt="Image Preview" style="max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px solid #ddd; display: block; margin: 0 auto 10px auto;">
-                <span id="heroFileName" style="font-size: 0.9em; color: #555;"></span>
+    function AdminApp() {
+      const [auth, setAuth] = React.useState(localStorage.getItem('imamaAdmin') === 'true');
+      const [password, setPassword] = React.useState('');
+      const [message, setMessage] = React.useState('');
+      const [data, setData] = React.useState(stored);
+
+      const handleLogin = () => {
+        if (password === 'imama123') {
+          localStorage.setItem('imamaAdmin', 'true');
+          setAuth(true);
+          setMessage('Login berhasil. Silakan edit konten.');
+        } else {
+          setMessage('Password salah.');
+        }
+      };
+
+      const saveData = () => {
+        localStorage.setItem('imamaSiteData', JSON.stringify(data));
+        setMessage('Perubahan telah disimpan. Refresh halaman utama untuk melihat hasil.');
+      };
+
+      const resetData = () => {
+        localStorage.removeItem('imamaSiteData');
+        setData(defaultData);
+        setMessage('Data kembali ke default.');
+      };
+
+      if (!auth) {
+        return (
+          <div className="min-h-screen flex items-center justify-center px-6">
+            <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
+              <h1 className="text-2xl font-bold mb-4">Login Admin IMAMA</h1>
+              <p className="text-slate-600 mb-6">Masukkan password admin untuk mengakses editor konten.</p>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 mb-4" placeholder="Password admin" />
+              <button onClick={handleLogin} className="w-full rounded-full bg-emerald-600 text-white py-3 font-semibold hover:bg-emerald-700 transition">Masuk</button>
+              {message && <p className="mt-4 text-sm text-red-600">{message}</p>}
             </div>
-            <button onclick="uploadHeroSlide()">Tambah Slide</button>
-            <div id="manageHeroSlides" class="manage-list"></div>
-        </div>
+          </div>
+        );
+      }
 
-        <div class="admin-card">
-            <h3><i class="fas fa-info-circle"></i> Update Tentang Kami</h3>
-            <textarea id="aboutInput" rows="4"></textarea>
-            <button onclick="updateAbout()">Simpan Perubahan</button>
-        </div>
-
-        <div class="admin-card">
-            <h3><i class="fas fa-calendar-plus"></i> Tambah Kegiatan</h3>
-            <input type="text" id="eventTitle" placeholder="Judul Kegiatan">
-            <input type="text" id="eventCategory" placeholder="Kategori (Contoh: Akademik)">
-            <textarea id="eventDesc" placeholder="Deskripsi Kegiatan"></textarea>
-            <input type="date" id="eventDate">
-            <input type="file" id="eventImage" accept="image/*">
-            <button onclick="addEvent()">Tambah Kegiatan</button>
-            <div id="manageEvents" class="manage-list"></div>
-        </div>
-
-        <div class="admin-card">
-            <h3><i class="fas fa-users"></i> Tambah Pengurus</h3>
-            <input type="text" id="staffName" placeholder="Nama Lengkap">
-            <input type="text" id="staffPosition" placeholder="Jabatan">
-            <select id="staffDept" style="width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px;">
-                <option value="BPH">BPH</option>
-                <option value="DPM">DPM</option>
-                <option value="INFOKOM">INFOKOM</option>
-                <option value="DBM">DBM</option>
-                <option value="EKRAF">EKRAF</option>
-                <option value="DPO">DPO</option>
-                <option value="KORWIL">KORWIL</option>
-            </select>
-            <input type="file" id="staffImage" accept="image/*">
-            <button onclick="addStaff()">Tambah Pengurus</button>
-            <div id="manageStaff" class="manage-list"></div>
-        </div>
-
-        <div class="admin-card">
-            <h3><i class="fas fa-image"></i> Tambah Galeri</h3>
-            <input type="file" id="galleryImage" accept="image/*">
-            <input type="text" id="galleryCaption" placeholder="Keterangan Foto">
-            <button onclick="addGallery()">Upload ke Galeri</button>
-            <div id="manageGallery" class="manage-list"></div>
-        </div>
-
-        <div class="admin-card">
-            <h3>Manajemen Data</h3>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-                <button onclick="exportData()" style="background: #2ecc71;"><i class="fas fa-download"></i> Download Backup (JSON)</button>
-                <button onclick="document.getElementById('importFile').click()" style="background: #3498db;"><i class="fas fa-upload"></i> Import Backup</button>
-                <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
-                <button onclick="clearAllData()" style="background: #e74c3c;"><i class="fas fa-trash"></i> Reset Semua Data</button>
+      return (
+        <div className="min-h-screen bg-slate-50 py-12 px-6">
+          <div className="max-w-6xl mx-auto space-y-8">
+            <div className="flex items-center justify-between gap-4 flex-col md:flex-row">
+              <div>
+                <h1 className="text-3xl font-bold">Dashboard Admin IMAMA</h1>
+                <p className="text-slate-600">Edit konten situs dan simpan perubahan langsung ke browser.</p>
+              </div>
+              <a href="/" className="rounded-full border border-emerald-600 px-5 py-3 text-emerald-700 hover:bg-emerald-50 transition">Lihat Situs</a>
             </div>
-        </div>
-    </div>
 
-    <script src="api.js"></script>
-    <script src="script.js"></script>
-    <script src="admin.js"></script>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="bg-white rounded-3xl shadow-xl p-8">
+                <h2 className="text-xl font-semibold mb-4">Hero Section</h2>
+                <label className="block text-sm text-slate-700 mb-2">Judul Hero</label>
+                <input type="text" value={data.hero.title} onChange={e => setData({...data, hero: {...data.hero, title: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3 mb-4" />
+                <label className="block text-sm text-slate-700 mb-2">Subjudul Hero</label>
+                <textarea value={data.hero.subtitle} onChange={e => setData({...data, hero: {...data.hero, subtitle: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3 mb-4" rows="4"></textarea>
+                <label className="block text-sm text-slate-700 mb-2">Teks tombol utama</label>
+                <input type="text" value={data.hero.ctaPrimary} onChange={e => setData({...data, hero: {...data.hero, ctaPrimary: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3 mb-4" />
+                <label className="block text-sm text-slate-700 mb-2">Teks tombol sekunder</label>
+                <input type="text" value={data.hero.ctaSecondary} onChange={e => setData({...data, hero: {...data.hero, ctaSecondary: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3" />
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-xl p-8">
+                <h2 className="text-xl font-semibold mb-4">Konten Tentang</h2>
+                <label className="block text-sm text-slate-700 mb-2">Intro</label>
+                <textarea value={data.about.intro} onChange={e => setData({...data, about: {...data.about, intro: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3 mb-4" rows="4"></textarea>
+                <label className="block text-sm text-slate-700 mb-2">Sejarah</label>
+                <textarea value={data.about.history} onChange={e => setData({...data, about: {...data.about, history: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3 mb-4" rows="3"></textarea>
+                <label className="block text-sm text-slate-700 mb-2">Logo</label>
+                <textarea value={data.about.logo} onChange={e => setData({...data, about: {...data.about, logo: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3 mb-4" rows="3"></textarea>
+                <label className="block text-sm text-slate-700 mb-2">Filosofi</label>
+                <textarea value={data.about.philosophy} onChange={e => setData({...data, about: {...data.about, philosophy: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3 mb-4" rows="3"></textarea>
+                <label className="block text-sm text-slate-700 mb-2">Visi</label>
+                <textarea value={data.about.vision} onChange={e => setData({...data, about: {...data.about, vision: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3" rows="3"></textarea>
+              </div>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="bg-white rounded-3xl shadow-xl p-8">
+                <h2 className="text-xl font-semibold mb-4">Kontak Organisasi</h2>
+                <label className="block text-sm text-slate-700 mb-2">WhatsApp</label>
+                <input type="text" value={data.contact.whatsapp} onChange={e => setData({...data, contact: {...data.contact, whatsapp: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3 mb-4" />
+                <label className="block text-sm text-slate-700 mb-2">Instagram</label>
+                <input type="text" value={data.contact.instagram} onChange={e => setData({...data, contact: {...data.contact, instagram: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3 mb-4" />
+                <label className="block text-sm text-slate-700 mb-2">Email</label>
+                <input type="text" value={data.contact.email} onChange={e => setData({...data, contact: {...data.contact, email: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3 mb-4" />
+                <label className="block text-sm text-slate-700 mb-2">Alamat</label>
+                <input type="text" value={data.contact.address} onChange={e => setData({...data, contact: {...data.contact, address: e.target.value}})} className="w-full rounded-3xl border border-slate-200 px-4 py-3" />
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-xl p-8">
+                <h2 className="text-xl font-semibold mb-4">Tindakan</h2>
+                <p className="text-slate-600 mb-6">Simpan perubahan untuk membuat konten baru muncul di halaman utama dengan refresh.</p>
+                <button onClick={saveData} className="w-full rounded-full bg-emerald-600 text-white py-3 font-semibold mb-4 hover:bg-emerald-700 transition">Simpan Perubahan</button>
+                <button onClick={resetData} className="w-full rounded-full border border-slate-300 bg-white py-3 font-semibold text-slate-700 hover:bg-slate-100 transition">Reset ke Default</button>
+                {message && <p className="mt-5 text-sm text-emerald-700">{message}</p>}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-xl p-8">
+              <h2 className="text-xl font-semibold mb-4">Petunjuk Admin</h2>
+              <ul className="list-disc list-inside text-slate-600 space-y-2">
+                <li>Gunakan password default <strong>imama123</strong> untuk login.</li>
+                <li>Setiap perubahan akan tersimpan lokal di browser kamu.</li>
+                <li>Untuk melihat hasil, buka kembali <a href="/" className="text-emerald-600 hover:underline">Halaman Utama</a> dan refresh.</li>
+                <li>Admin page ini bisa diakses lewat <strong>/admin.html</strong>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('admin-root')).render(<AdminApp />);
+  </script>
 </body>
 </html>
