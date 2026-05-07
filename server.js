@@ -8,6 +8,9 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
+// Melayani file statis dari root folder
+app.use(express.static(path.join(__dirname)));
+
 // Konfigurasi Koneksi Database
 const db = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -26,6 +29,11 @@ db.getConnection((err, connection) => {
         console.log('MySQL Connected via Pool...');
         connection.release();
     }
+});
+
+// Route fallback untuk halaman Admin
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 // Routes: About
@@ -266,8 +274,11 @@ app.post('/api/login', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
 
 module.exports = app;
