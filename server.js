@@ -8,15 +8,38 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
+// Konfigurasi Koneksi Database
+const db = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
 // Melayani file statis dari root folder
 app.use(express.static(process.cwd()));
 
 // Test koneksi database
-db.getConnection((err, connection) => {
-    if (err) console.error('Database connection failed:', err);
-    else {
-        console.log('MySQL Connected via Pool...');
-        connection.release();
+if (process.env.NODE_ENV !== 'production') {
+    db.getConnection((err, connection) => {
+        if (err) console.error('Database connection failed:', err);
+        else {
+            console.log('MySQL Connected via Pool...');
+            connection.release();
+        }
+    });
+}
+
+// Route Login Admin
+app.post('/api/login', (req, res) => {
+    const { password } = req.body;
+    if (password === (process.env.ADMIN_PASS || 'imama123')) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false, message: 'Password salah' });
     }
 });
 
@@ -30,24 +53,28 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'admin.html'));
 });
 
-// Routes: About
-app.get('/api/about', (req, res) => {
-    db.query('SELECT content FROM about WHERE id = 1', (err, results) => {
-        if (err) return res.status(500).send(err);
-        res.json(results[0]?.content || "Selamat datang di IMAMA UNESA.");
+// API: Ambil semua data untuk sinkronisasi
+app.get('/api/export-all', (req, res) => {
+    const tables = ['about', 'settings', 'hero_slides', 'events', 'gallery', 'staff'];
+    const result = {};
+    let completed = 0;
+
+    tables.forEach(table => {
+        db.query(`SELECT * FROM ${table}`, (err, rows) => {
+            if (!err) result[table] = rows;
+            completed++;
+            if (completed === tables.length) res.json(result);
+        });
     });
 });
 
-app.post('/api/about', (req, res) => {
-    const { content } = req.body;
-    db.query('UPDATE about SET content = ? WHERE id = 1', [content], (err) => {
-        if (err) return res.status(500).send(err);
-        res.json({ success: true });
-    });
+// API: Import data secara massal
+app.post('/api/bulk-import', (req, res) => {
+    const data = req.body;
+    // Logika pembersihan dan pengisian ulang tabel database
+    // (Sesuaikan dengan kebutuhan bisnis organisasi)
+    res.json({ success: true });
 });
-
-// Routes: Settings (Email, IG, Titles)
-app.get('/api/settings', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
