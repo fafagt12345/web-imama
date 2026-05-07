@@ -3,6 +3,10 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/admin",
+      "destination": "/server.js"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/server.js"
     }

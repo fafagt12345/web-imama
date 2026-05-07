@@ -8,8 +8,8 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// Melayani file statis dari root folder
-app.use(express.static(path.join(__dirname)));
+// Melayani file statis dari root folder menggunakan process.cwd()
+app.use(express.static(process.cwd()));
 
 // Konfigurasi Koneksi Database
 const db = mysql.createPool({
@@ -33,7 +33,8 @@ db.getConnection((err, connection) => {
 
 // Route fallback untuk halaman Admin
 app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin.html'));
+    // Pastikan file di sistem bernama admin.html (huruf kecil)
+    res.sendFile(path.join(process.cwd(), 'admin.html'));
 });
 
 // Routes: About
