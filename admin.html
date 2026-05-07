@@ -72,33 +72,36 @@
       const [data, setData] = React.useState(stored);
       const [tab, setTab] = React.useState('hero');
 
-      // SINKRONISASI: Ambil data terbaru dari MySQL saat masuk
+      // SINKRONISASI: Ambil data terbaru dari MySQL saat admin login
       React.useEffect(() => {
         if (auth) {
           const loadFromDB = async () => {
+            setMessage('⏳ Mengambil data terbaru dari Cloud...');
             try {
               const remoteData = await ApiService.exportAll();
               if (remoteData && Object.keys(remoteData).length > 0) {
                 const merged = {
                   ...defaultData,
-                  ...remoteData,
-                  // Mapping balik dari tabel DB ke state React
+                  // Mapping dari format DB ke format state React
                   about: { ...defaultData.about, intro: remoteData.about?.[0]?.content || defaultData.about.intro },
+                  hero: { ...defaultData.hero, title: remoteData.settings?.hero_title || defaultData.hero.title, subtitle: remoteData.settings?.hero_subtitle || defaultData.hero.subtitle },
                   news: remoteData.events?.map(e => ({ ...e, desc: e.description, date: e.event_date, image: e.image_data })) || defaultData.news,
                   officers: remoteData.staff?.map(s => ({ ...s, role: s.position, dept: s.department, image: s.image_data })) || defaultData.officers,
-                  gallery: remoteData.gallery?.map(g => g.image_data) || defaultData.gallery
+                  gallery: remoteData.gallery?.map(g => g.image_data) || defaultData.gallery,
+                  timeline: remoteData.timeline || defaultData.timeline,
+                  contact: { ...defaultData.contact, email: remoteData.settings?.email || defaultData.contact.email, instagram: remoteData.settings?.instagram || defaultData.contact.instagram }
                 };
                 setData(merged);
-                localStorage.setItem('imamaSiteData', JSON.stringify(merged));
-                setMessage('✓ Data berhasil disinkronkan dari database');
+                localStorage.setItem('imamaSiteData', JSON.stringify(merged)); // Simpan juga ke lokal sebagai cache
+                setMessage('✓ Data berhasil disinkronkan dari Cloud.');
               }
             } catch (err) {
-              setMessage('⚠️ Gagal sinkronisasi otomatis, menggunakan data lokal.');
-            }
+              setMessage('⚠️ Gagal sinkronisasi otomatis dari Cloud. Menggunakan data lokal.');
+            } finally { setTimeout(() => setMessage(''), 3000); }
           };
           loadFromDB();
         }
-      }, [auth]);
+      }, [auth]); // Jalankan hanya saat status auth berubah
 
       const handleLogin = async () => {
         try {
@@ -126,9 +129,19 @@
           // Kita kirim data ke backend. 
           // Kita sesuaikan nama field agar sinkron dengan tabel MySQL
           const syncData = {
-            ...data,
-            events: data.news,    // Frontend 'news' -> Backend 'events'
-            staff: data.officers  // Frontend 'officers' -> Backend 'staff'
+            // Mapping dari format state React ke format DB
+            about: data.about.intro, // Kirim hanya intro untuk about
+            settings: { // Kirim settings terpisah
+                hero_title: data.hero.title,
+                hero_subtitle: data.hero.subtitle,
+                email: data.contact.email,
+                instagram: data.contact.instagram
+            },
+            events: data.news,
+            staff: data.officers,
+            gallery: data.gallery,
+            hero_slides: data.hero_slides, // Jika ada
+            timeline: data.timeline // Jika ada
           };
 
           await ApiService.bulkImport(syncData);
