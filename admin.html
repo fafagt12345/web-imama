@@ -151,10 +151,19 @@
             reader.onload = (event) => {
               try {
                 const imported = JSON.parse(event.target.result);
-                setData(imported);
-                localStorage.setItem('imamaSiteData', JSON.stringify(imported));
-                setMessage('✓ Data berhasil diimport! Refresh halaman utama untuk melihat.');
-                setTimeout(() => setMessage(''), 3000);
+                
+                // Validasi dan Mapping data agar tidak crash
+                const mappedData = {
+                  ...defaultData,
+                  ...imported,
+                  news: imported.events || imported.news || defaultData.news,
+                  officers: imported.staff || imported.officers || defaultData.officers
+                };
+
+                setData(mappedData);
+                localStorage.setItem('imamaSiteData', JSON.stringify(mappedData));
+                setMessage('✓ Data berhasil diimport dan disinkronkan!');
+                setTimeout(() => setMessage(''), 5000);
               } catch (err) {
                 setMessage('❌ File JSON tidak valid: ' + err.message);
               }
@@ -287,10 +296,10 @@
             <div className="space-y-4 pb-24">
               {tab === 'hero' && (
                 <>
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Judul</label><input type="text" value={data.hero.title} onChange={e => setData({...data, hero: {...data.hero, title: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Subjudul</label><textarea value={data.hero.subtitle} onChange={e => setData({...data, hero: {...data.hero, subtitle: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" rows="4"></textarea></div>
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Tombol 1</label><input type="text" value={data.hero.ctaPrimary} onChange={e => setData({...data, hero: {...data.hero, ctaPrimary: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Tombol 2</label><input type="text" value={data.hero.ctaSecondary} onChange={e => setData({...data, hero: {...data.hero, ctaSecondary: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Judul</label><input type="text" value={data.hero?.title || ''} onChange={e => setData({...data, hero: {...data.hero, title: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Subjudul</label><textarea value={data.hero?.subtitle || ''} onChange={e => setData({...data, hero: {...data.hero, subtitle: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" rows="4"></textarea></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Tombol 1</label><input type="text" value={data.hero?.ctaPrimary || ''} onChange={e => setData({...data, hero: {...data.hero, ctaPrimary: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Tombol 2</label><input type="text" value={data.hero?.ctaSecondary || ''} onChange={e => setData({...data, hero: {...data.hero, ctaSecondary: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
                 </>
               )}
 
@@ -299,7 +308,7 @@
                   {['intro', 'history', 'logo', 'philosophy', 'vision'].map(key => (
                     <div key={key} className="bg-white rounded-2xl p-6 border border-slate-200">
                       <label className="text-sm font-semibold block mb-2 capitalize">{key === 'intro' ? 'Intro' : key === 'history' ? 'Sejarah' : key === 'logo' ? 'Makna Logo' : key === 'philosophy' ? 'Filosofi' : 'Visi'}</label>
-                      <textarea value={data.about[key]} onChange={e => setData({...data, about: {...data.about, [key]: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" rows="4"></textarea>
+                      <textarea value={data.about?.[key] || ''} onChange={e => setData({...data, about: {...data.about, [key]: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" rows="4"></textarea>
                     </div>
                   ))}
                 </>

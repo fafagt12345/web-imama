@@ -68,12 +68,58 @@ app.get('/api/export-all', (req, res) => {
     });
 });
 
-// API: Import data secara massal
-app.post('/api/bulk-import', (req, res) => {
+// API: Import data secara massal (Sinkronisasi ke MySQL)
+app.post('/api/bulk-import', async (req, res) => {
     const data = req.body;
-    // Logika pembersihan dan pengisian ulang tabel database
-    // (Sesuaikan dengan kebutuhan bisnis organisasi)
-    res.json({ success: true });
+    
+    try {
+        // 1. Update About
+        if (data.about) {
+            const aboutText = typeof data.about === 'string' ? data.about : (data.about.intro || '');
+            db.query('UPDATE about SET content = ? WHERE id = 1', [aboutText]);
+        }
+
+        // 2. Update Settings (Hero & Contact)
+        if (data.contact) {
+            const settings = [
+                ['email', data.contact.email],
+                ['instagram', data.contact.instagram],
+                ['hero_title', data.hero?.title || ''],
+                ['hero_subtitle', data.hero?.subtitle || '']
+            ];
+            settings.forEach(([key, val]) => {
+                db.query('REPLACE INTO settings (s_key, s_value) VALUES (?, ?)', [key, val]);
+            });
+        }
+
+        // 3. Update Events (Hapus lama, masukkan baru)
+        if (data.events && data.events.length > 0) {
+            db.query('DELETE FROM events', () => {
+                const vals = data.events.map(e => [e.title, e.category || 'Umum', e.desc || '', e.date || null, e.image || null]);
+                db.query('INSERT INTO events (title, category, description, event_date, image_data) VALUES ?', [vals]);
+            });
+        }
+
+        // 4. Update Staff
+        if (data.staff && data.staff.length > 0) {
+            db.query('DELETE FROM staff', () => {
+                const vals = data.staff.map(s => [s.name, s.role || '', s.dept || 'BPH', s.image || null]);
+                db.query('INSERT INTO staff (name, position, department, image_data) VALUES ?', [vals]);
+            });
+        }
+
+        // 5. Update Gallery
+        if (data.gallery && data.gallery.length > 0) {
+            db.query('DELETE FROM gallery', () => {
+                const vals = data.gallery.map(img => [img, '']);
+                db.query('INSERT INTO gallery (image_data, caption) VALUES ?', [vals]);
+            });
+        }
+
+        res.json({ success: true, message: "Data berhasil disinkronkan ke Cloud" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 const PORT = process.env.PORT || 3000;
