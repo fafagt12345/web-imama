@@ -123,6 +123,26 @@
         setData({ ...data, [key]: updated });
       };
 
+      const handleImageUpload = (e, key, idx, field) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const base64 = event.target.result;
+            if (key === 'gallery') {
+              const updated = [...data.gallery];
+              updated[idx] = base64;
+              setData({ ...data, gallery: updated });
+            } else {
+              updateItem(key, idx, field, base64);
+            }
+            setMessage(`✓ Foto diupload (${(file.size / 1024).toFixed(1)}KB)`);
+            setTimeout(() => setMessage(''), 2000);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
       if (!auth) {
         return (
           <div className="min-h-screen bg-emerald-600 flex items-center justify-center px-6">
@@ -229,7 +249,7 @@
                         <div><input type="text" value={officer.major} onChange={e => updateItem('officers', idx, 'major', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Jurusan" /></div>
                         <div><input type="text" value={officer.batch} onChange={e => updateItem('officers', idx, 'batch', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Angkatan" /></div>
                         <div><input type="text" value={officer.dept} onChange={e => updateItem('officers', idx, 'dept', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Departemen" /></div>
-                        <div><input type="text" value={officer.image} onChange={e => updateItem('officers', idx, 'image', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="URL foto" /></div>
+                        <div className="border-t pt-3"><label className="text-xs font-semibold block mb-2 text-slate-600">Foto Pengurus</label><div className="flex gap-2"><input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'officers', idx, 'image')} className="flex-1" /><button onClick={() => updateItem('officers', idx, 'image', '')} className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm">Clear</button></div>{officer.image && officer.image.startsWith('data:') && <div className="mt-2 text-xs text-emerald-600">✓ Foto tersimpan lokal</div>}</div>
                       </div>
                     </div>
                   ))}
@@ -268,7 +288,7 @@
                         <div><input type="text" value={item.title} onChange={e => updateItem('news', idx, 'title', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Judul" /></div>
                         <div><input type="text" value={item.date} onChange={e => updateItem('news', idx, 'date', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Tanggal" /></div>
                         <div><input type="text" value={item.category} onChange={e => updateItem('news', idx, 'category', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Kategori" /></div>
-                        <div><input type="text" value={item.image} onChange={e => updateItem('news', idx, 'image', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="URL gambar" /></div>
+                        <div className="border-t pt-3"><label className="text-xs font-semibold block mb-2 text-slate-600">Gambar Kegiatan</label><div className="flex gap-2"><input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'news', idx, 'image')} className="flex-1" /></div>{item.image && item.image.startsWith('data:') && <div className="mt-2 text-xs text-emerald-600">✓ Gambar disimpan lokal</div>}</div>
                       </div>
                     </div>
                   ))}
@@ -279,9 +299,17 @@
               {tab === 'gallery' && (
                 <>
                   {data.gallery.map((img, idx) => (
-                    <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200 flex justify-between items-center gap-4">
-                      <input type="text" value={img} onChange={e => updateItem('gallery', idx, 0, e.target.value)} className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="URL gambar" />
-                      <button onClick={() => deleteItem('gallery', idx)} className="text-red-600 text-sm px-3 py-1 hover:bg-red-50 rounded-full">Hapus</button>
+                    <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Foto {idx + 1}</h3>
+                        <button onClick={() => deleteItem('gallery', idx)} className="text-red-600 text-sm px-3 py-1 hover:bg-red-50 rounded-full">Hapus</button>
+                      </div>
+                      <div className="space-y-3">
+                        <div><label className="text-xs font-semibold block mb-2 text-slate-600">Upload atau Paste URL</label><div className="flex gap-2"><input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'gallery', idx)} className="flex-1" /></div></div>
+                        <div className="text-xs text-slate-500">atau</div>
+                        <input type="text" value={img.startsWith('data:') ? '(Foto tersimpan lokal)' : img} onChange={e => !img.startsWith('data:') && updateItem('gallery', idx, 0, e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Paste URL gambar..." disabled={img.startsWith('data:')} />
+                        {img.startsWith('data:') && <div className="text-xs text-emerald-600">✓ Foto disimpan lokal</div>}
+                      </div>
                     </div>
                   ))}
                   <button onClick={() => addItem('gallery')} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700">+ Tambah Foto</button>
