@@ -8,9 +8,6 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// Melayani file statis dari root folder menggunakan process.cwd()
-app.use(express.static(process.cwd()));
-
 // Konfigurasi Koneksi Database
 const db = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -29,12 +26,6 @@ db.getConnection((err, connection) => {
         console.log('MySQL Connected via Pool...');
         connection.release();
     }
-});
-
-// Route fallback untuk halaman Admin
-app.get('/admin', (req, res) => {
-    // Menggunakan path.resolve untuk kepastian lokasi file
-    res.sendFile(path.resolve(process.cwd(), 'admin.html'));
 });
 
 // Routes: About
