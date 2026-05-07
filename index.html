@@ -157,31 +157,54 @@
 
       React.useEffect(() => {
         async function fetchData() {
+          const savedData = localStorage.getItem('imamaSiteData');
           try {
-            // Ambil semua data dari MySQL via API
             const rawData = await ApiService.exportAll();
-            
             if (rawData && Object.keys(rawData).length > 0) {
-              setSiteData(prev => ({
-                ...prev,
+              const merged = {
+                ...defaultData,
                 about: {
-                  ...prev.about,
-                  intro: rawData.about?.[0]?.content || prev.about.intro
+                  ...defaultData.about,
+                  intro: (raw.about?.intro || raw.about?.content) || defaultData.about.intro,
+                  history: raw.about?.history || defaultData.about.history,
+                  logo: raw.about?.logo || defaultData.about.logo,
+                  philosophy: raw.about?.philosophy || defaultData.about.philosophy,
+                  vision: raw.about?.vision || defaultData.about.vision
                 },
                 hero: {
-                  ...prev.hero, title: rawData.settings?.hero_title || prev.hero.title, subtitle: rawData.settings?.hero_subtitle || rawData.settings?.hero_subtitle || prev.hero.subtitle
+                  ...defaultData.hero,
+                  title: rawData.settings?.hero_title || defaultData.hero.title,
+                  subtitle: rawData.settings?.hero_subtitle || defaultData.hero.subtitle
                 },
-                news: rawData.events?.map(e => ({ ...e, desc: e.description, date: e.event_date, image: e.image_data })) || prev.news,
-                gallery: rawData.gallery?.map(g => g.image_data) || prev.gallery,
-                officers: rawData.staff || prev.officers,
-                timeline: rawData.timeline || prev.timeline
-              }));
+                contact: {
+                  ...defaultData.contact,
+                  email: rawData.settings?.email || defaultData.contact.email,
+                  instagram: rawData.settings?.instagram || defaultData.contact.instagram,
+                  whatsapp: rawData.settings?.whatsapp || defaultData.contact.whatsapp,
+                  address: rawData.settings?.address || defaultData.contact.address
+                },
+                news: rawData.events?.map(e => ({ title: e.title, date: e.event_date, category: e.category, desc: e.description, image: e.image_data })) || defaultData.news,
+                gallery: rawData.gallery?.map(g => g.image_data) || defaultData.gallery,
+                officers: rawData.staff?.map(s => ({ name: s.name, role: s.position, major: s.major || '', batch: s.batch || '', dept: s.department, image: s.image_data })) || defaultData.officers,
+                timeline: rawData.timeline || defaultData.timeline
+              };
+              setSiteData(merged);
+              localStorage.setItem('imamaSiteData', JSON.stringify(merged));
+              setLoading(false);
+              return;
             }
           } catch (err) {
-            console.error("Gagal mengambil data dari server, menggunakan default.", err);
-          } finally {
-            setLoading(false);
+            console.error('Gagal mengambil data dari server, menggunakan local fallback.', err);
           }
+          if (savedData) {
+            try {
+              setSiteData(JSON.parse(savedData));
+            } catch (err) {
+              console.error('Data lokal tidak valid, menggunakan default.', err);
+              setSiteData(defaultData);
+            }
+          }
+          setLoading(false);
         }
         fetchData();
       }, []);

@@ -4,13 +4,24 @@ USE db_imama;
 -- Tabel untuk data "Tentang Kami"
 CREATE TABLE IF NOT EXISTS about (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    content TEXT NOT NULL,
+    intro TEXT NOT NULL,
+    content TEXT,
+    history TEXT,
+    logo TEXT,
+    philosophy TEXT,
+    vision TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+ALTER TABLE about ADD COLUMN IF NOT EXISTS content TEXT;
+ALTER TABLE about ADD COLUMN IF NOT EXISTS history TEXT;
+ALTER TABLE about ADD COLUMN IF NOT EXISTS logo TEXT;
+ALTER TABLE about ADD COLUMN IF NOT EXISTS philosophy TEXT;
+ALTER TABLE about ADD COLUMN IF NOT EXISTS vision TEXT;
+
 -- Data awal untuk About
-INSERT INTO about (content) 
-SELECT 'Selamat datang di IMAMA UNESA.' 
+INSERT INTO about (intro, content, history, logo, philosophy, vision)
+SELECT 'Selamat datang di IMAMA UNESA.', 'Selamat datang di IMAMA UNESA.', '', '', '', ''
 WHERE NOT EXISTS (SELECT 1 FROM about LIMIT 1);
 
 -- Tabel untuk Slide Hero

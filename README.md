@@ -20,9 +20,11 @@ Website ini sekarang menggunakan **MySQL**.
 
 ### Cara Menjalankan:
 1. Import `database.sql` ke MySQL Anda.
-2. Jalankan `npm install express mysql2 cors body-parser dotenv` di terminal.
+2. Jalankan `npm install express mysql2 cors dotenv` di terminal.
 3. Jalankan server dengan perintah `node server.js`.
-4. Buka `index.html` di browser.
+4. Buka `http://localhost:3000` di browser.
+
+> `admin.html` menyimpan data ke server, dan `index.html` memuat data langsung dari server agar perubahan dapat dilihat pada perangkat lain.
 
 ### Deployment
 Untuk menjalankan di server produksi:
