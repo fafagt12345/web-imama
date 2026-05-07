@@ -2,27 +2,38 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config(); // Memuat variabel lingkungan dari .env
+require('dotenv').config();
 
 const app = express();
-app.use(cors()); // Mengizinkan CORS untuk komunikasi frontend-backend
-app.use(express.json({ limit: '50mb' })); // Mengizinkan body JSON, dengan limit besar untuk Base64
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
 
 // Melayani file statis dari root folder
 app.use(express.static(process.cwd()));
 
 // --- Konfigurasi Koneksi Database MySQL ---
 const db = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'db_imama',
     waitForConnections: true,
     connectionLimit: 10, // Batasi jumlah koneksi
     queueLimit: 0
 });
 
 // --- API Routes ---
+
+// Route: Login Admin
+app.post('/api/login', (req, res) => {
+    const { password } = req.body;
+    const adminPass = process.env.ADMIN_PASS || 'imama123';
+    if (password === adminPass) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false, message: 'Password salah' });
+    }
+});
 
 // Route: Ambil Semua Data (Sinkronisasi Antar Device)
 app.get('/api/export-all', (req, res) => {
@@ -32,20 +43,24 @@ app.get('/api/export-all', (req, res) => {
 
     tables.forEach(table => {
         db.query(`SELECT * FROM ${table}`, (err, rows) => {
-            if (!err) result[table] = rows;
+            if (!err) {
+                if (table === 'settings') {
+                    const settingsObj = {};
+                    rows.forEach(s => settingsObj[s.s_key] = s.s_value);
+                    result[table] = settingsObj;
+                } else {
+                    result[table] = rows;
+                }
+            }
             completed++;
             if (completed === tables.length) {
-                // Format settings dari array ke object
-                const settingsObj = {};
-                if (result.settings) result.settings.forEach(s => settingsObj[s.s_key] = s.s_value);
-                result.settings = settingsObj;
                 res.json(result);
             }
         });
     });
 });
 
-// Route: Simpan Massal (Dari Tombol Simpan Admin)
+// Route: Simpan Massal (Sinkronisasi ke Database)
 app.post('/api/bulk-import', async (req, res) => {
     const data = req.body;
     const conn = db.promise();
@@ -64,22 +79,33 @@ app.post('/api/bulk-import', async (req, res) => {
             }
         }
 
-        // 3. Sync Events
+        // 3. Sync Events (News)
         if (data.events || data.news) {
             const events = data.events || data.news;
             await conn.query('DELETE FROM events');
             if (events.length > 0) {
-                const vals = events.map(e => [e.title, e.category || 'Umum', e.desc || e.description || '', e.date || e.event_date, e.image || e.image_data]);
+                const vals = events.map(e => [
+                    e.title, 
+                    e.category || 'Umum', 
+                    e.desc || e.description || '', 
+                    e.date || e.event_date || null, 
+                    e.image || e.image_data || null
+                ]);
                 await conn.query('INSERT INTO events (title, category, description, event_date, image_data) VALUES ?', [vals]);
             }
         }
 
-        // 4. Sync Staff
+        // 4. Sync Staff (Officers)
         if (data.staff || data.officers) {
             const staff = data.staff || data.officers;
             await conn.query('DELETE FROM staff');
             if (staff.length > 0) {
-                const vals = staff.map(s => [s.name, s.role || s.position, s.dept || s.department, s.image || s.image_data]);
+                const vals = staff.map(s => [
+                    s.name, 
+                    s.role || s.position || '', 
+                    s.dept || s.department || 'BPH', 
+                    s.image || s.image_data || null
+                ]);
                 await conn.query('INSERT INTO staff (name, position, department, image_data) VALUES ?', [vals]);
             }
         }
@@ -95,31 +121,16 @@ app.post('/api/bulk-import', async (req, res) => {
 
         res.json({ success: true });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// Route: Login Admin
-app.post('/api/login', (req, res) => {
-    const { password } = req.body;
-    const adminPass = process.env.ADMIN_PASS || 'imama123';
-    if (password === adminPass) {
-        res.json({ success: true, message: "Login berhasil" });
-    } else {
-        res.status(401).json({ success: false, message: "Password salah" });
-    }
-});
-
-// Route untuk menyajikan file HTML
-app.get('/', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'index.html'));
-});
-
+// Route Fallback untuk Frontend
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'admin.html'));
 });
 
-// --- Server Listener ---
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => {
@@ -127,4 +138,5 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
+// Penting untuk Vercel
 module.exports = app;
