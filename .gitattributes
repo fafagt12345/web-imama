@@ -1,0 +1,2 @@
+# Atur semua file teks agar selalu dikonversi ke LF saat masuk ke repository
+* text=auto

@@ -38,7 +38,7 @@ app.get('/', (req, res) => {
 
 // Route eksplisit untuk halaman admin
 app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin.html'));
+    res.sendFile(path.join(__dirname, 'admin.html'), { headers: { 'Content-Type': 'text/html' } });
 });
 
 // Routes: About
