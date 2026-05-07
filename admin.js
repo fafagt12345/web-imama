@@ -1,183 +1,3 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    checkAuth();
-    if(document.getElementById('aboutInput')) {
-        const aboutVal = await ApiService.getAbout();
-        document.getElementById('aboutInput').value = aboutVal;
-        loadSettingsToInputs();
-        loadManagementLists();
-    }
-
-    // Fitur: Pratinjau gambar untuk upload slide hero
-    const heroImageInput = document.getElementById('heroImageInput');
-    const heroImagePreview = document.getElementById('heroImagePreview');
-    const heroFileName = document.getElementById('heroFileName');
-    const heroImagePreviewContainer = document.getElementById('heroImagePreviewContainer');
-
-    if (heroImageInput && heroImagePreview && heroFileName && heroImagePreviewContainer) {
-        heroImageInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    heroImagePreview.src = e.target.result;
-                    heroFileName.textContent = file.name;
-                    heroImagePreviewContainer.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            } else { // Clear preview if no file selected
-                heroImagePreview.src = '#';
-                heroFileName.textContent = '';
-                heroImagePreviewContainer.style.display = 'none';
-            }
-        });
-    }
-});
-
-async function loadSettingsToInputs() {
-    const s = await ApiService.getSettings();
-    document.getElementById('setHeroTitle').value = s.hero_title || '';
-    document.getElementById('setHeroSubtitle').value = s.hero_subtitle || '';
-    document.getElementById('setEmail').value = s.email || '';
-    document.getElementById('setIg').value = s.instagram || '';
-}
-
-async function saveSettings() {
-    const settings = {
-        hero_title: document.getElementById('setHeroTitle').value,
-        hero_subtitle: document.getElementById('setHeroSubtitle').value,
-        email: document.getElementById('setEmail').value,
-        instagram: document.getElementById('setIg').value
-    };
-    await ApiService.updateSettings(settings);
-    alert("Pengaturan disimpan!");
-    location.reload();
-}
-
-async function uploadHeroSlide() {
-    const file = document.getElementById('heroImageInput').files[0];
-    if(!file) return alert("Pilih gambar!");
-    const imageData = await toBase64(file);
-    console.log("Admin: Image data generated (length):", imageData.length);
-    await ApiService.addHeroSlide(imageData);
-    alert("Slide ditambahkan!");
-    
-    // Bersihkan input dan pratinjau setelah upload
-    document.getElementById('heroImageInput').value = ''; 
-    document.getElementById('heroImagePreview').src = '#';
-    document.getElementById('heroFileName').textContent = '';
-    document.getElementById('heroImagePreviewContainer').style.display = 'none';
-    loadManagementLists();
-}
-
-async function loadManagementLists() {
-    const slides = await ApiService.getHeroSlides();
-    document.getElementById('manageHeroSlides').innerHTML = slides.map(s => `
-        <div class="manage-item">
-            <img src="${s.image_data}" style="height:40px; border-radius:4px; margin-right: 10px;">
-            <span>Slide ID: ${s.id}</span>
-            <button class="btn-delete" onclick="deleteHeroSlide(${s.id})">Hapus</button>
-        </div>
-    `).join('');
-
-    const events = await ApiService.getEvents();
-    document.getElementById('manageEvents').innerHTML = '<h4>Kelola Kegiatan:</h4>' + events.map(e => `
-        <div class="manage-item">
-            <span>${e.title}</span>
-            <button class="btn-delete" onclick="deleteEvent(${e.id})">Hapus</button>
-        </div>
-    `).join('');
-
-    const staff = await ApiService.getStaff();
-    document.getElementById('manageStaff').innerHTML = '<h4>Kelola Pengurus:</h4>' + staff.map(s => `
-        <div class="manage-item">
-            <span>${s.name} (${s.department})</span>
-            <button class="btn-delete" onclick="deleteStaff(${s.id})">Hapus</button>
-        </div>
-    `).join('');
-
-    const gallery = await ApiService.getGallery();
-    document.getElementById('manageGallery').innerHTML = '<h4>Kelola Galeri:</h4>' + gallery.map(g => `
-        <div class="manage-item">
-            <span>Foto ID: ${g.id}</span>
-            <button class="btn-delete" onclick="deleteGallery(${g.id})">Hapus</button>
-        </div>
-    `).join('');
-}
-
-async function deleteHeroSlide(id) {
-    if(confirm('Hapus slide ini?')) {
-        await ApiService.deleteHeroSlide(id);
-        loadManagementLists();
-    }
-}
-
-async function deleteStaff(id) {
-    if(confirm('Hapus pengurus ini?')) {
-        await ApiService.deleteStaff(id);
-        loadManagementLists();
-    }
-}
-
-async function deleteEvent(id) {
-    if(confirm('Hapus kegiatan ini?')) {
-        await ApiService.deleteEvent(id);
-        loadManagementLists();
-    }
-}
-
-async function deleteGallery(id) {
-    if(confirm('Hapus foto ini?')) {
-        await ApiService.deleteGallery(id);
-        loadManagementLists();
-    }
-}
-
-async function handleLogin() {
-    const input = document.getElementById('adminPassword').value;
-    try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: input })
-        });
-        const result = await response.json();
-        if (result.success) {
-            localStorage.setItem('imama_is_admin', 'true');
-            checkAuth();
-        } else {
-            alert("Password Salah!");
-        }
-    } catch (err) {
-        alert("Terjadi kesalahan koneksi ke server.");
-    }
-}
-
-function checkAuth() {
-    const isAdmin = localStorage.getItem('imama_is_admin') === 'true';
-    if(isAdmin) {
-        document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('adminDashboard').style.display = 'block';
-    }
-}
-
-function handleLogout() {
-    localStorage.removeItem('imama_is_admin');
-    location.reload();
-}
-
-async function updateAbout() {
-    const text = document.getElementById('aboutInput').value;
-    try {
-        await ApiService.updateAbout(text);
-        alert("Konten Tentang Kami berhasil diperbarui!");
-    } catch (err) {
-        alert("Gagal memperbarui data: " + err.message);
-    }
-}
-
-async function addEvent() {
-    const title = document.getElementById('eventTitle').value;
-    const category = document.getElementById('eventCategory').value;
     const desc = document.getElementById('eventDesc').value;
     const date = document.getElementById('eventDate').value;
     const file = document.getElementById('eventImage').files[0];
@@ -188,6 +8,12 @@ async function addEvent() {
     if(file) {
         imageData = await toBase64(file);
     }
+    
+    // Tampilkan loading agar admin tahu proses sedang berjalan
+    const btn = document.activeElement;
+    const originalText = btn.innerText;
+    btn.innerText = "⏳ Menyimpan...";
+    btn.disabled = true;
 
     try {
         await ApiService.addEvent({ title, category, desc, date, image: imageData });
@@ -195,19 +21,13 @@ async function addEvent() {
         location.reload(); // Reload untuk memperbarui tampilan dashboard jika perlu
     } catch (err) {
         alert("Gagal menambah kegiatan: " + err.message);
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
     }
 }
 
-async function addStaff() {
-    const name = document.getElementById('staffName').value;
-    const position = document.getElementById('staffPosition').value;
-    const department = document.getElementById('staffDept').value;
-    const file = document.getElementById('staffImage').files[0];
-
-    if(!name || !position) return alert("Isi nama dan jabatan!");
-
-    let imageData = null;
-    if(file) imageData = await toBase64(file);
+...
 
     try {
         await ApiService.addStaff({ name, position, department, image: imageData });
@@ -268,16 +88,3 @@ function importData(event) {
 
 async function clearAllData() {
     if(confirm("Hapus semua data konten?")) {
-        await ApiService.clearData();
-        alert("Data dibersihkan.");
-        location.reload();
-    }
-}
-
-// Helper konversi gambar ke string agar bisa disimpan di localStorage
-const toBase64 = file => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-});
