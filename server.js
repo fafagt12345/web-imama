@@ -33,8 +33,8 @@ db.getConnection((err, connection) => {
 
 // Route fallback untuk halaman Admin
 app.get('/admin', (req, res) => {
-    // Pastikan file di sistem bernama admin.html (huruf kecil)
-    res.sendFile(path.join(process.cwd(), 'admin.html'));
+    // Menggunakan path.resolve untuk kepastian lokasi file
+    res.sendFile(path.resolve(process.cwd(), 'admin.html'));
 });
 
 // Routes: About
