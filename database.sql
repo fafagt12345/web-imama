@@ -60,3 +60,11 @@ CREATE TABLE IF NOT EXISTS staff (
     image_data LONGTEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Tabel untuk Timeline Perjalanan
+CREATE TABLE IF NOT EXISTS timeline (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    year VARCHAR(10) NOT NULL,
+    event TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

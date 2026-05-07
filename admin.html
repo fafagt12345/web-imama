@@ -72,53 +72,14 @@
       const [data, setData] = React.useState(stored);
       const [tab, setTab] = React.useState('hero');
 
-      // SINKRONISASI: Ambil data terbaru dari MySQL saat admin login
-      React.useEffect(() => {
-        if (auth) {
-          const loadFromDB = async () => {
-            setMessage('⏳ Mengambil data terbaru dari Cloud...');
-            try {
-              const remoteData = await ApiService.exportAll();
-              if (remoteData && Object.keys(remoteData).length > 0) {
-                const merged = {
-                  ...defaultData,
-                  // Mapping dari format DB ke format state React
-                  about: { ...defaultData.about, intro: remoteData.about?.[0]?.content || defaultData.about.intro },
-                  hero: { ...defaultData.hero, title: remoteData.settings?.hero_title || defaultData.hero.title, subtitle: remoteData.settings?.hero_subtitle || defaultData.hero.subtitle },
-                  news: remoteData.events?.map(e => ({ ...e, desc: e.description, date: e.event_date, image: e.image_data })) || defaultData.news,
-                  officers: remoteData.staff?.map(s => ({ ...s, role: s.position, dept: s.department, image: s.image_data })) || defaultData.officers,
-                  gallery: remoteData.gallery?.map(g => g.image_data) || defaultData.gallery,
-                  timeline: remoteData.timeline || defaultData.timeline,
-                  contact: { ...defaultData.contact, email: remoteData.settings?.email || defaultData.contact.email, instagram: remoteData.settings?.instagram || defaultData.contact.instagram }
-                };
-                setData(merged);
-                localStorage.setItem('imamaSiteData', JSON.stringify(merged)); // Simpan juga ke lokal sebagai cache
-                setMessage('✓ Data berhasil disinkronkan dari Cloud.');
-              }
-            } catch (err) {
-              setMessage('⚠️ Gagal sinkronisasi otomatis dari Cloud. Menggunakan data lokal.');
-            } finally { setTimeout(() => setMessage(''), 3000); }
-          };
-          loadFromDB();
-        }
-      }, [auth]); // Jalankan hanya saat status auth berubah
-
-      const handleLogin = async () => {
-        try {
-          const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
-          });
-          const result = await response.json();
-          if (result.success) {
-            localStorage.setItem('imamaAdmin', 'true');
-            setAuth(true);
-          } else {
-            setMessage(result.message || 'Password salah!');
-          }
-        } catch (err) {
-          setMessage('Gagal terhubung ke server.');
+      const handleLogin = () => {
+        if (password === 'imama123') {
+          localStorage.setItem('imamaAdmin', 'true');
+          setAuth(true);
+          setMessage('Login berhasil');
+          setTimeout(() => setMessage(''), 2000);
+        } else {
+          setMessage('Password salah!');
         }
       };
 
@@ -129,27 +90,21 @@
           // Kita kirim data ke backend. 
           // Kita sesuaikan nama field agar sinkron dengan tabel MySQL
           const syncData = {
-            // Mapping dari format state React ke format DB
-            about: data.about.intro, // Kirim hanya intro untuk about
-            settings: { // Kirim settings terpisah
-                hero_title: data.hero.title,
-                hero_subtitle: data.hero.subtitle,
-                email: data.contact.email,
-                instagram: data.contact.instagram
-            },
-            events: data.news,
-            staff: data.officers,
-            gallery: data.gallery,
-            hero_slides: data.hero_slides, // Jika ada
-            timeline: data.timeline // Jika ada
+            ...data,
+            events: data.news,    // Frontend 'news' -> Backend 'events'
+            staff: data.officers  // Frontend 'officers' -> Backend 'staff'
           };
 
           await ApiService.bulkImport(syncData);
           
-          localStorage.setItem('imamaSiteData', JSON.stringify(data));
+          try {
+            localStorage.setItem('imamaSiteData', JSON.stringify(data));
+          } catch (e) {
+            console.warn("LocalStorage penuh, cache lokal tidak diperbarui.");
+          }
           setMessage('✓ Berhasil! Data tersimpan di Cloud. Semua perangkat sekarang bisa melihat perubahan.');
         } catch (err) {
-          setMessage('❌ Gagal menyimpan ke server: ' + err.message);
+          setMessage('❌ Gagal menyimpan: ' + err.message);
         }
         setTimeout(() => setMessage(''), 5000);
       };
@@ -192,19 +147,14 @@
             reader.onload = (event) => {
               try {
                 const imported = JSON.parse(event.target.result);
-                
-                // Validasi dan Mapping data agar tidak crash
-                const mappedData = {
-                  ...defaultData,
-                  ...imported,
-                  news: imported.events || imported.news || defaultData.news,
-                  officers: imported.staff || imported.officers || defaultData.officers
-                };
-
-                setData(mappedData);
-                localStorage.setItem('imamaSiteData', JSON.stringify(mappedData));
-                setMessage('✓ Data berhasil diimport dan disinkronkan!');
-                setTimeout(() => setMessage(''), 5000);
+                setData(imported);
+                try {
+                  localStorage.setItem('imamaSiteData', JSON.stringify(imported));
+                } catch (e) {
+                  console.warn("Quota exceeded during import.");
+                }
+                setMessage('✓ Data berhasil diimport! Refresh halaman utama untuk melihat.');
+                setTimeout(() => setMessage(''), 3000);
               } catch (err) {
                 setMessage('❌ File JSON tidak valid: ' + err.message);
               }
@@ -249,8 +199,8 @@
 
       const handleImageUpload = (e, key, idx, field) => {
         const file = e.target.files[0];
-        if (file && file.size > 5242880) {
-          setMessage('⚠️ Foto terlalu besar (max 5MB)');
+        if (file && file.size > 1048576) {
+          setMessage('⚠️ Foto terlalu besar (max 1MB)');
           return;
         }
         if (file) {
@@ -337,10 +287,10 @@
             <div className="space-y-4 pb-24">
               {tab === 'hero' && (
                 <>
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Judul</label><input type="text" value={data.hero?.title || ''} onChange={e => setData({...data, hero: {...data.hero, title: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Subjudul</label><textarea value={data.hero?.subtitle || ''} onChange={e => setData({...data, hero: {...data.hero, subtitle: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" rows="4"></textarea></div>
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Tombol 1</label><input type="text" value={data.hero?.ctaPrimary || ''} onChange={e => setData({...data, hero: {...data.hero, ctaPrimary: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Tombol 2</label><input type="text" value={data.hero?.ctaSecondary || ''} onChange={e => setData({...data, hero: {...data.hero, ctaSecondary: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Judul</label><input type="text" value={data.hero.title} onChange={e => setData({...data, hero: {...data.hero, title: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Subjudul</label><textarea value={data.hero.subtitle} onChange={e => setData({...data, hero: {...data.hero, subtitle: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" rows="4"></textarea></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Tombol 1</label><input type="text" value={data.hero.ctaPrimary} onChange={e => setData({...data, hero: {...data.hero, ctaPrimary: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Tombol 2</label><input type="text" value={data.hero.ctaSecondary} onChange={e => setData({...data, hero: {...data.hero, ctaSecondary: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
                 </>
               )}
 
@@ -349,7 +299,7 @@
                   {['intro', 'history', 'logo', 'philosophy', 'vision'].map(key => (
                     <div key={key} className="bg-white rounded-2xl p-6 border border-slate-200">
                       <label className="text-sm font-semibold block mb-2 capitalize">{key === 'intro' ? 'Intro' : key === 'history' ? 'Sejarah' : key === 'logo' ? 'Makna Logo' : key === 'philosophy' ? 'Filosofi' : 'Visi'}</label>
-                      <textarea value={data.about?.[key] || ''} onChange={e => setData({...data, about: {...data.about, [key]: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" rows="4"></textarea>
+                      <textarea value={data.about[key]} onChange={e => setData({...data, about: {...data.about, [key]: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" rows="4"></textarea>
                     </div>
                   ))}
                 </>
