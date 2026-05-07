@@ -8,9 +8,6 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// Menggunakan path absolut untuk melayani file statis
-app.use(express.static(path.join(__dirname)));
-
 // Konfigurasi Koneksi Database
 const db = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -29,16 +26,6 @@ db.getConnection((err, connection) => {
         console.log('MySQL Connected via Pool...');
         connection.release();
     }
-});
-
-// Route untuk halaman utama
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Route eksplisit untuk halaman admin
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin.html'), { headers: { 'Content-Type': 'text/html' } });
 });
 
 // Routes: About
