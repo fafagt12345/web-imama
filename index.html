@@ -164,9 +164,11 @@
             if (rawData && Object.keys(rawData).length > 0) {
               setSiteData(prev => ({
                 ...prev,
-                // Mapping data dari tabel MySQL ke format React state
-                about: rawData.about?.[0] || prev.about,
-                news: rawData.events || prev.news,
+                about: { 
+                  ...prev.about, 
+                  intro: rawData.about?.[0]?.content || prev.about.intro 
+                },
+                news: rawData.events?.map(e => ({ ...e, desc: e.description, date: e.event_date, image: e.image_data })) || prev.news,
                 gallery: rawData.gallery?.map(g => g.image_data) || prev.gallery,
                 officers: rawData.staff || prev.officers,
                 timeline: rawData.timeline || prev.timeline
