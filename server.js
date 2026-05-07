@@ -36,6 +36,11 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Route eksplisit untuk halaman admin
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 // Routes: About
 app.get('/api/about', (req, res) => {
     db.query('SELECT content FROM about WHERE id = 1', (err, results) => {
