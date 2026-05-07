@@ -164,9 +164,12 @@
             if (rawData && Object.keys(rawData).length > 0) {
               setSiteData(prev => ({
                 ...prev,
-                about: { 
-                  ...prev.about, 
-                  intro: rawData.about?.[0]?.content || prev.about.intro 
+                about: {
+                  ...prev.about,
+                  intro: rawData.about?.[0]?.content || prev.about.intro
+                },
+                hero: {
+                  ...prev.hero, title: rawData.settings?.hero_title || prev.hero.title, subtitle: rawData.settings?.hero_subtitle || prev.hero.subtitle
                 },
                 news: rawData.events?.map(e => ({ ...e, desc: e.description, date: e.event_date, image: e.image_data })) || prev.news,
                 gallery: rawData.gallery?.map(g => g.image_data) || prev.gallery,

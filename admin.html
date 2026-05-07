@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin IMAMA Magetan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>body { font-family: Inter, system-ui, sans-serif; }</style>
+</head>
+<body>
+  <script src="api.js"></script>
+  <div id="admin-root"></div>
+
+  <script type="text/babel">
+    const defaultData = {
+      hero: {
+        title: 'Membangun Solidaritas Mahasiswa Magetan di Universitas Negeri Surabaya',
+        subtitle: 'IMAMA Magetan UNESA hadir untuk memperkuat rasa kekeluargaan, profesionalisme, dan semangat rantau di Surabaya.',
+        ctaPrimary: 'Gabung IMAMA',
+        ctaSecondary: 'Lihat Kegiatan'
+      },
+      about: {
+        intro: 'IMAMA Magetan UNESA adalah wadah aspirasi dan solidaritas mahasiswa Magetan yang menuntut ilmu di Universitas Negeri Surabaya. Kami bergerak dalam kegiatan pengembangan organisasi, sosial, akademik, dan budaya rantau.',
+        history: 'Bermula dari kumpulan mahasiswa rantau Magetan yang ingin menyatukan tekad dan budaya, IMAMA lahir sebagai identitas kebersamaan untuk berbagi kekuatan selama studi.',
+        logo: 'Logo IMAMA merepresentasikan dua sisi: akar Magetan yang kuat dan ruang gerak inovasi di dunia kampus.',
+        philosophy: 'Filosofi kami adalah "Rantau Terikat, Karya Terbuka" — menjaga nilai keluarga asal, sambil berkembang bersama dalam kebersamaan akademik.',
+        vision: 'Menjadi organisasi mahasiswa Magetan yang progresif, aktif, dan menjadi inspirasi solidaritas rantau di lingkungan kampus.'
+      },
+      departments: [
+        { name: 'BPH', color: 'from-emerald-500 to-emerald-700', desc: 'Koordinasi strategis dan penguatan organisasi.', leader: 'Ahmad Fulan', members: 42, icon: '🛡️' },
+        { name: 'DPM', color: 'from-slate-500 to-slate-700', desc: 'Pengawasan dan kebijakan internal.', leader: 'Nadia Hapsari', members: 18, icon: '📜' }
+      ],
+      officers: [
+        { name: 'Ahmad Fulan', role: 'Ketua Umum', major: 'Teknik Informatika', batch: '2024', dept: 'BPH', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&w=600&q=80' },
+        { name: 'Nadia Hapsari', role: 'Sekretaris', major: 'Manajemen', batch: '2024', dept: 'DPM', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80' }
+      ],
+      programs: [
+        { title: 'Makrab Solidaritas', icon: '🔥', text: 'Gathering hangat untuk memperkuat ikatan rantau dan networking.' },
+        { title: 'Bakti Sosial', icon: '🌱', text: 'Aksi sosial untuk masyarakat Magetan dan lingkungan Surabaya.' }
+      ],
+      news: [
+        { title: 'Pelatihan Kepemimpinan Rantau', date: 'Mei 2025', category: 'Program Kerja', image: 'https://images.unsplash.com/photo-1515162305289-2c51f1d9e5f2?auto=format&fit=crop&w=800&q=80' }
+      ],
+      gallery: [
+        'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=80'
+      ],
+      timeline: [
+        { year: '2020', event: 'IMAMA berdiri sebagai organisasi mahasiswa rantau Magetan di UNESA.' }
+      ],
+      contact: {
+        whatsapp: '+6281234567890',
+        instagram: 'imama.magetan',
+        email: 'admin@imamaunesa.org',
+        address: 'Sekretariat IMAMA UNESA, Surabaya'
+      },
+      stats: [
+        { label: 'Anggota Aktif', value: '200+' },
+        { label: 'Departemen', value: '7' }
+      ]
+    };
+
+    const savedData = localStorage.getItem('imamaSiteData');
+    const stored = savedData ? JSON.parse(savedData) : defaultData;
+
+    function AdminApp() {
+      const [auth, setAuth] = React.useState(localStorage.getItem('imamaAdmin') === 'true');
+      const [password, setPassword] = React.useState('');
+      const [message, setMessage] = React.useState('');
+      const [data, setData] = React.useState(stored);
+      const [tab, setTab] = React.useState('hero');
+
+      const handleLogin = () => {
+        if (password === 'imama123') {
+          localStorage.setItem('imamaAdmin', 'true');
+          setAuth(true);
+          setMessage('Login berhasil');
+          setTimeout(() => setMessage(''), 2000);
+        } else {
+          setMessage('Password salah!');
+        }
+      };
+
+      const saveData = async () => {
+        try {
+          setMessage('⏳ Menyimpan ke database...');
+          
+          // Kita kirim data ke backend. 
+          // Kita sesuaikan nama field agar sinkron dengan tabel MySQL
+          const syncData = {
+            ...data,
+            // Mapping dari format state React ke format DB
+            about: data.about.intro, // Kirim hanya intro untuk about
+            settings: { // Kirim settings terpisah
+                hero_title: data.hero.title,
+                hero_subtitle: data.hero.subtitle,
+                email: data.contact.email,
+                instagram: data.contact.instagram
+            },
+            events: data.news,
+            staff: data.officers,
+            gallery: data.gallery,
+            timeline: data.timeline
+          };
+
+          await ApiService.bulkImport(syncData);
+          
+          localStorage.setItem('imamaSiteData', JSON.stringify(data));
+          setMessage('✓ Berhasil! Data tersimpan di Cloud. Semua perangkat sekarang bisa melihat perubahan.');
+        } catch (err) {
+          setMessage('❌ Gagal menyimpan ke server: ' + err.message);
+        }
+        setTimeout(() => setMessage(''), 5000);
+      };
+
+      const resetData = () => {
+        if (confirm('Yakin reset ke default? Data akan hilang!')) {
+          localStorage.removeItem('imamaSiteData');
+          setData(defaultData);
+          setMessage('Data reset ke default.');
+          setTimeout(() => setMessage(''), 2000);
+        }
+      };
+
+      const exportData = async () => {
+        try {
+          const fullData = await ApiService.exportAll();
+          const dataStr = JSON.stringify(fullData, null, 2);
+          const blob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `imama-database-sync-${new Date().toISOString().slice(0, 10)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          setMessage('✓ Database berhasil diexport!');
+        } catch (err) {
+          setMessage('❌ Gagal export: ' + err.message);
+        }
+        setTimeout(() => setMessage(''), 3000);
+      };
+
+      const importData = async () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              try {
+                const imported = JSON.parse(event.target.result);
+                setData(imported);
+                localStorage.setItem('imamaSiteData', JSON.stringify(imported));
+                setMessage('✓ Data berhasil diimport! Refresh halaman utama untuk melihat.');
+                setTimeout(() => setMessage(''), 3000);
+              } catch (err) {
+                setMessage('❌ File JSON tidak valid: ' + err.message);
+              }
+            };
+            reader.readAsText(file);
+          }
+        };
+        input.click();
+      };
+
+      const addItem = (key) => {
+        if (key === 'officers') {
+          setData({ ...data, officers: [...data.officers, { name: 'Nama', role: 'Jabatan', major: 'Jurusan', batch: '2024', dept: 'BPH', image: '' }] });
+        } else if (key === 'departments') {
+          setData({ ...data, departments: [...data.departments, { name: 'DEPT', color: 'from-emerald-500 to-emerald-700', desc: 'Deskripsi', leader: 'Nama', members: 10, icon: '📌' }] });
+        } else if (key === 'programs') {
+          setData({ ...data, programs: [...data.programs, { title: 'Program Baru', icon: '✨', text: 'Deskripsi' }] });
+        } else if (key === 'news') {
+          setData({ ...data, news: [...data.news, { title: 'Berita Baru', date: 'Bulan 2025', category: 'Event', image: '' }] });
+        } else if (key === 'gallery') {
+          setData({ ...data, gallery: [...data.gallery, 'https://via.placeholder.com/800'] });
+        } else if (key === 'timeline') {
+          setData({ ...data, timeline: [...data.timeline, { year: new Date().getFullYear().toString(), event: 'Event baru' }] });
+        }
+      };
+
+      const deleteItem = (key, idx) => {
+        const updated = [...data[key]];
+        updated.splice(idx, 1);
+        setData({ ...data, [key]: updated });
+      };
+
+      const updateItem = (key, idx, field, value) => {
+        const updated = [...data[key]];
+        if (Array.isArray(updated[idx])) {
+          updated[idx] = value;
+        } else {
+          updated[idx] = { ...updated[idx], [field]: value };
+        }
+        setData({ ...data, [key]: updated });
+      };
+
+      const handleImageUpload = (e, key, idx, field) => {
+        const file = e.target.files[0];
+        if (file && file.size > 5242880) {
+          setMessage('⚠️ Foto terlalu besar (max 5MB)');
+          return;
+        }
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const base64 = event.target.result;
+            try {
+              if (key === 'gallery') {
+                setData(prev => {
+                  const updated = [...prev.gallery];
+                  updated[idx] = base64;
+                  return { ...prev, gallery: updated };
+                });
+              } else if (key === 'officers' || key === 'news') {
+                setData(prev => {
+                  const updated = [...prev[key]];
+                  updated[idx] = { ...updated[idx], [field]: base64 };
+                  return { ...prev, [key]: updated };
+                });
+              }
+              setMessage(`✓ Foto diupload (${(file.size / 1024).toFixed(1)}KB)`);
+              setTimeout(() => setMessage(''), 2000);
+            } catch (err) {
+              setMessage('❌ Error upload foto');
+            }
+          };
+          reader.onerror = () => {
+            setMessage('❌ Gagal membaca file');
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      if (!auth) {
+        return (
+          <div className="min-h-screen bg-emerald-600 flex items-center justify-center px-6">
+            <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
+              <h1 className="text-3xl font-bold text-center mb-2">IMAMA Admin</h1>
+              <p className="text-center text-slate-600 mb-8">Dashboard editor konten organisasi</p>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleLogin()} className="w-full rounded-2xl border-2 border-slate-200 px-4 py-3 mb-4 focus:outline-none focus:border-emerald-600" placeholder="Masukkan password" />
+              <button onClick={handleLogin} className="w-full rounded-full bg-emerald-600 text-white py-3 font-semibold hover:bg-emerald-700 transition">Login</button>
+              {message && <p className="mt-4 text-center text-red-600 text-sm">{message}</p>}
+            </div>
+          </div>
+        );
+      }
+
+      const tabs = [
+        { id: 'hero', label: '🎯 Hero' },
+        { id: 'about', label: '📖 Tentang' },
+        { id: 'departments', label: '🏢 Departemen' },
+        { id: 'officers', label: '👔 Pengurus' },
+        { id: 'programs', label: '📅 Program' },
+        { id: 'news', label: '📰 Kegiatan' },
+        { id: 'gallery', label: '📸 Galeri' },
+        { id: 'timeline', label: '⏰ Timeline' },
+        { id: 'contact', label: '📞 Kontak' },
+        { id: 'stats', label: '📊 Statistik' }
+      ];
+
+      return (
+        <div className="min-h-screen bg-slate-50">
+          <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+              <h1 className="text-2xl font-bold">IMAMA Dashboard</h1>
+              <div className="flex gap-3">
+                <a href="/" className="px-4 py-2 rounded-full border border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-sm">Lihat Situs</a>
+                <button onClick={() => { localStorage.removeItem('imamaAdmin'); setAuth(false); }} className="px-4 py-2 rounded-full bg-slate-200 text-slate-700 hover:bg-slate-300 text-sm">Logout</button>
+              </div>
+            </div>
+          </header>
+
+          <div className="max-w-7xl mx-auto p-6">
+            <div className="flex gap-2 mb-6 overflow-x-auto bg-white rounded-2xl p-2 border border-slate-200">
+              {tabs.map(t => (
+                <button key={t.id} onClick={() => setTab(t.id)} className={`px-3 py-2 rounded-full whitespace-nowrap text-sm font-semibold transition ${tab === t.id ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {message && <div className="mb-6 p-4 bg-emerald-100 text-emerald-800 rounded-2xl border border-emerald-300 text-sm">{message}</div>}
+
+            <div className="space-y-4 pb-24">
+              {tab === 'hero' && (
+                <>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Judul</label><input type="text" value={data.hero.title} onChange={e => setData({...data, hero: {...data.hero, title: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Subjudul</label><textarea value={data.hero.subtitle} onChange={e => setData({...data, hero: {...data.hero, subtitle: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" rows="4"></textarea></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Tombol 1</label><input type="text" value={data.hero.ctaPrimary} onChange={e => setData({...data, hero: {...data.hero, ctaPrimary: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Tombol 2</label><input type="text" value={data.hero.ctaSecondary} onChange={e => setData({...data, hero: {...data.hero, ctaSecondary: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                </>
+              )}
+
+              {tab === 'about' && (
+                <>
+                  {['intro', 'history', 'logo', 'philosophy', 'vision'].map(key => (
+                    <div key={key} className="bg-white rounded-2xl p-6 border border-slate-200">
+                      <label className="text-sm font-semibold block mb-2 capitalize">{key === 'intro' ? 'Intro' : key === 'history' ? 'Sejarah' : key === 'logo' ? 'Makna Logo' : key === 'philosophy' ? 'Filosofi' : 'Visi'}</label>
+                      <textarea value={data.about[key]} onChange={e => setData({...data, about: {...data.about, [key]: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" rows="4"></textarea>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {tab === 'departments' && (
+                <>
+                  {data.departments.map((dept, idx) => (
+                    <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Dept. {idx + 1}</h3>
+                        <button onClick={() => deleteItem('departments', idx)} className="text-red-600 text-sm px-3 py-1 hover:bg-red-50 rounded-full">Hapus</button>
+                      </div>
+                      <div className="grid gap-3">
+                        <div><input type="text" value={dept.name} onChange={e => updateItem('departments', idx, 'name', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Nama departemen" /></div>
+                        <div><textarea value={dept.desc} onChange={e => updateItem('departments', idx, 'desc', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" rows="2" placeholder="Deskripsi"></textarea></div>
+                        <div><input type="text" value={dept.leader} onChange={e => updateItem('departments', idx, 'leader', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Ketua" /></div>
+                        <div><input type="number" value={dept.members} onChange={e => updateItem('departments', idx, 'members', parseInt(e.target.value))} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Jumlah anggota" /></div>
+                        <div><input type="text" value={dept.icon} onChange={e => updateItem('departments', idx, 'icon', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Icon (emoji)" /></div>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => addItem('departments')} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700">+ Tambah Departemen</button>
+                </>
+              )}
+
+              {tab === 'officers' && (
+                <>
+                  {data.officers.map((officer, idx) => (
+                    <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Pengurus {idx + 1}</h3>
+                        <button onClick={() => deleteItem('officers', idx)} className="text-red-600 text-sm px-3 py-1 hover:bg-red-50 rounded-full">Hapus</button>
+                      </div>
+                      <div className="grid gap-3">
+                        <div><input type="text" value={officer.name} onChange={e => updateItem('officers', idx, 'name', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Nama" /></div>
+                        <div><input type="text" value={officer.role} onChange={e => updateItem('officers', idx, 'role', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Jabatan" /></div>
+                        <div><input type="text" value={officer.major} onChange={e => updateItem('officers', idx, 'major', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Jurusan" /></div>
+                        <div><input type="text" value={officer.batch} onChange={e => updateItem('officers', idx, 'batch', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Angkatan" /></div>
+                        <div><input type="text" value={officer.dept} onChange={e => updateItem('officers', idx, 'dept', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Departemen" /></div>
+                        <div className="border-t pt-3"><label className="text-xs font-semibold block mb-2 text-slate-600">Foto Pengurus</label><div className="flex gap-2"><input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'officers', idx, 'image')} className="flex-1" /><button onClick={() => updateItem('officers', idx, 'image', '')} className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm">Clear</button></div>{officer.image && officer.image.startsWith('data:') && <div className="mt-2 text-xs text-emerald-600">✓ Foto tersimpan lokal</div>}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => addItem('officers')} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700">+ Tambah Pengurus</button>
+                </>
+              )}
+
+              {tab === 'programs' && (
+                <>
+                  {data.programs.map((prog, idx) => (
+                    <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Program {idx + 1}</h3>
+                        <button onClick={() => deleteItem('programs', idx)} className="text-red-600 text-sm px-3 py-1 hover:bg-red-50 rounded-full">Hapus</button>
+                      </div>
+                      <div className="grid gap-3">
+                        <div><input type="text" value={prog.title} onChange={e => updateItem('programs', idx, 'title', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Judul" /></div>
+                        <div><input type="text" value={prog.icon} onChange={e => updateItem('programs', idx, 'icon', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Icon (emoji)" /></div>
+                        <div><textarea value={prog.text} onChange={e => updateItem('programs', idx, 'text', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" rows="2" placeholder="Deskripsi"></textarea></div>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => addItem('programs')} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700">+ Tambah Program</button>
+                </>
+              )}
+
+              {tab === 'news' && (
+                <>
+                  {data.news.map((item, idx) => (
+                    <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Kegiatan {idx + 1}</h3>
+                        <button onClick={() => deleteItem('news', idx)} className="text-red-600 text-sm px-3 py-1 hover:bg-red-50 rounded-full">Hapus</button>
+                      </div>
+                      <div className="grid gap-3">
+                        <div><input type="text" value={item.title} onChange={e => updateItem('news', idx, 'title', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Judul" /></div>
+                        <div><input type="text" value={item.date} onChange={e => updateItem('news', idx, 'date', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Tanggal" /></div>
+                        <div><input type="text" value={item.category} onChange={e => updateItem('news', idx, 'category', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Kategori" /></div>
+                        <div className="border-t pt-3"><label className="text-xs font-semibold block mb-2 text-slate-600">Gambar Kegiatan</label><div className="flex gap-2"><input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'news', idx, 'image')} className="flex-1" /></div>{item.image && item.image.startsWith('data:') && <div className="mt-2 text-xs text-emerald-600">✓ Gambar disimpan lokal</div>}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => addItem('news')} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700">+ Tambah Kegiatan</button>
+                </>
+              )}
+
+              {tab === 'gallery' && (
+                <>
+                  {data.gallery.map((img, idx) => (
+                    <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Foto {idx + 1}</h3>
+                        <button onClick={() => deleteItem('gallery', idx)} className="text-red-600 text-sm px-3 py-1 hover:bg-red-50 rounded-full">Hapus</button>
+                      </div>
+                      <div className="space-y-3">
+                        <div><label className="text-xs font-semibold block mb-2 text-slate-600">Upload Foto</label><input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'gallery', idx)} className="w-full" /></div>
+                        <div className="text-xs text-slate-500 text-center">--- atau paste URL ---</div>
+                        <input type="text" value={img.startsWith('data:') ? '(Foto disimpan lokal)' : img} onChange={e => !img.startsWith('data:') && setData(prev => { const g = [...prev.gallery]; g[idx] = e.target.value; return {...prev, gallery: g}; })} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="https://..." disabled={img.startsWith('data:')} />
+                        {img.startsWith('data:') && <div className="text-xs text-emerald-600">✓ Tersimpan lokal</div>}
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => addItem('gallery')} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700">+ Tambah Foto</button>
+                </>
+              )}
+
+              {tab === 'timeline' && (
+                <>
+                  {data.timeline.map((item, idx) => (
+                    <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Timeline {idx + 1}</h3>
+                        <button onClick={() => deleteItem('timeline', idx)} className="text-red-600 text-sm px-3 py-1 hover:bg-red-50 rounded-full">Hapus</button>
+                      </div>
+                      <div className="grid gap-3">
+                        <div><input type="text" value={item.year} onChange={e => updateItem('timeline', idx, 'year', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Tahun" /></div>
+                        <div><textarea value={item.event} onChange={e => updateItem('timeline', idx, 'event', e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2" rows="2" placeholder="Event"></textarea></div>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => addItem('timeline')} className="w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700">+ Tambah Timeline</button>
+                </>
+              )}
+
+              {tab === 'contact' && (
+                <>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">WhatsApp</label><input type="text" value={data.contact.whatsapp} onChange={e => setData({...data, contact: {...data.contact, whatsapp: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Instagram</label><input type="text" value={data.contact.instagram} onChange={e => setData({...data, contact: {...data.contact, instagram: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Email</label><input type="text" value={data.contact.email} onChange={e => setData({...data, contact: {...data.contact, email: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200"><label className="text-sm font-semibold block mb-2">Alamat</label><input type="text" value={data.contact.address} onChange={e => setData({...data, contact: {...data.contact, address: e.target.value}})} className="w-full rounded-xl border border-slate-200 px-4 py-2" /></div>
+                </>
+              )}
+
+              {tab === 'stats' && (
+                <>
+                  {data.stats.map((stat, idx) => (
+                    <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200">
+                      <div className="grid gap-3">
+                        <div><input type="text" value={stat.label} onChange={e => { const s = [...data.stats]; s[idx].label = e.target.value; setData({...data, stats: s}); }} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Label" /></div>
+                        <div><input type="text" value={stat.value} onChange={e => { const s = [...data.stats]; s[idx].value = e.target.value; setData({...data, stats: s}); }} className="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Nilai" /></div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {!['hero', 'about', 'contact', 'stats', 'departments', 'officers', 'programs', 'news', 'gallery', 'timeline'].includes(tab) && (
+                <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+                  <h3 className="font-semibold mb-2">📊 Sinkronisasi Data</h3>
+                  <p className="text-sm text-slate-600 mb-4">Gunakan fitur ini untuk sync data antar HP/Laptop:</p>
+                  <div className="flex gap-3 flex-wrap">
+                    <button onClick={exportData} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">⬇️ Export Data</button>
+                    <button onClick={importData} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">⬆️ Import Data</button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="fixed bottom-6 right-6 flex gap-3">
+              <button onClick={saveData} className="px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-700 shadow-lg">✓ Simpan</button>
+              <button onClick={exportData} className="px-4 py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 shadow-lg text-sm" title="Download data sebagai JSON">⬇️</button>
+              <button onClick={importData} className="px-4 py-2 bg-green-600 text-white rounded-full font-semibold hover:bg-green-700 shadow-lg text-sm" title="Upload data dari JSON">⬆️</button>
+              <button onClick={resetData} className="px-6 py-3 bg-slate-600 text-white rounded-full font-semibold hover:bg-slate-700 shadow-lg">↺ Reset</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('admin-root')).render(<AdminApp />);
+  </script>
+</body>
+</html>
