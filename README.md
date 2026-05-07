@@ -26,11 +26,12 @@ Website ini sekarang menggunakan **MySQL**.
 
 > `admin.html` menyimpan data ke server, dan `index.html` memuat data langsung dari server agar perubahan dapat dilihat pada perangkat lain.
 
-### Deployment
-Untuk menjalankan di server produksi:
-1. Pastikan variabel lingkungan (`.env`) sudah terisi:
+## Deployment ke Vercel
+1. Setup database MySQL eksternal (misal PlanetScale atau Railway).
+2. Set environment variables di Vercel:
    - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
-   - `ADMIN_PASS` (untuk keamanan, pindahkan PASS dari `admin.js` ke `.env`)
-2. Gunakan port dinamis: `const PORT = process.env.PORT || 3000;`.
-3. Gunakan process manager seperti **PM2**: `pm2 start server.js`.
-4. Pastikan folder publik di-serve melalui `express.static`.
+   - `ADMIN_PASS` (password admin, default: imama123)
+3. Push ke GitHub, lalu deploy di Vercel.
+4. Akses situs di URL Vercel, admin di `/admin`.
+
+> API routes di folder `api/` untuk serverless functions.
