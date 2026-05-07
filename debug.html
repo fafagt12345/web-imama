@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Admin IMAMA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 p-6">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">🔧 Debug Admin IMAMA</h1>
+
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Aksi Cepat</h2>
+      <div class="flex gap-3 flex-wrap">
+        <button onclick="clearCache()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">🗑️ Clear Cache & Reset</button>
+        <button onclick="testData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">✅ Load Test Data</button>
+        <button onclick="viewData()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">👁️ View Data</button>
+        <button onclick="downloadData()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">⬇️ Download Data</button>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 mb-6">
+      <h2 class="text-xl font-semibold mb-4">Info Storage</h2>
+      <pre id="info" class="bg-slate-100 p-4 rounded-lg text-sm overflow-auto max-h-96"></pre>
+    </div>
+
+    <div class="bg-yellow-50 rounded-2xl p-6 border border-yellow-200 mb-6">
+      <h2 class="text-xl font-semibold mb-4">⚠️ Data Sync Antar Device (HP & Laptop)</h2>
+      <p class="text-slate-700 mb-4"><strong>Masalah:</strong> Data hanya tersimpan di browser lokal. HP dan Laptop punya storage terpisah.</p>
+      <p class="text-slate-700 mb-4"><strong>Solusi:</strong> Export & Import data sebagai file JSON</p>
+      <ol class="list-decimal list-inside space-y-3 text-slate-700">
+        <li><strong>Di Laptop:</strong> Edit data → Klik ✓ Simpan → Klik ⬇️ Export (download file JSON)</li>
+        <li><strong>Kirim file</strong> ke HP (email, Google Drive, AirDrop, dll)</li>
+        <li><strong>Di HP:</strong> Buka /admin.html → Login → Klik ⬆️ Import → Pilih file JSON</li>
+        <li><strong>Data HP langsung update!</strong></li>
+        <li><strong>Ulangi</strong> jika ada edit baru di device lain</li>
+      </ol>
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 border border-slate-200">
+      <h2 class="text-xl font-semibold mb-4">Petunjuk Perbaikan</h2>
+      <ol class="list-decimal list-inside space-y-3 text-slate-700">
+        <li><strong>Klik "Clear Cache & Reset"</strong> untuk hapus semua data lama</li>
+        <li><strong>Klik "Load Test Data"</strong> untuk isi data test</li>
+        <li><strong>Buka <a href="/admin.html" class="text-blue-600 hover:underline">/admin.html</a></strong> dan login dengan password <code class="bg-slate-100 px-2 py-1">imama123</code></li>
+        <li><strong>Sekarang coba tambah pengurus atau foto</strong> - harus bisa</li>
+        <li><strong>Klik Simpan</strong> sebelum refresh halaman</li>
+        <li><strong>Refresh halaman utama</strong> untuk lihat hasil</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    function updateInfo() {
+      const adminAuth = localStorage.getItem('imamaAdmin');
+      const siteData = localStorage.getItem('imamaSiteData');
+      let info = '=== LOCAL STORAGE STATUS ===\n\n';
+      info += `Auth Status: ${adminAuth ? '✓ Login' : '✗ Not Login'}\n`;
+      info += `Data Tersimpan: ${siteData ? '✓ Ada' : '✗ Kosong'}\n`;
+      info += `\n=== SITE DATA ===\n`;
+      if (siteData) {
+        try {
+          const data = JSON.parse(siteData);
+          info += `Officers: ${data.officers?.length || 0} pengurus\n`;
+          info += `Gallery: ${data.gallery?.length || 0} foto\n`;
+          info += `News: ${data.news?.length || 0} kegiatan\n`;
+          info += `Departments: ${data.departments?.length || 0} departemen\n`;
+          info += `Programs: ${data.programs?.length || 0} program\n`;
+          info += `\n(Data preview di console)\n`;
+        } catch (e) {
+          info += `ERROR: Data corrupt - ${e.message}`;
+        }
+      }
+      document.getElementById('info').textContent = info;
+    }
+
+    function clearCache() {
+      if (confirm('⚠️ Hapus semua data? Ini tidak bisa dibatalkan!')) {
+        localStorage.clear();
+        sessionStorage.clear();
+        alert('✓ Cache cleared! Halaman direload...');
+        location.reload();
+      }
+    }
+
+    function testData() {
+      const testData = {
+        hero: {
+          title: 'Membangun Solidaritas Mahasiswa Magetan di Universitas Negeri Surabaya',
+          subtitle: 'IMAMA Magetan UNESA hadir untuk memperkuat rasa kekeluargaan, profesionalisme, dan semangat rantau di Surabaya.',
+          ctaPrimary: 'Gabung IMAMA',
+          ctaSecondary: 'Lihat Kegiatan'
+        },
+        about: {
+          intro: 'IMAMA Magetan UNESA adalah wadah aspirasi dan solidaritas mahasiswa Magetan...',
+          history: 'Bermula dari kumpulan mahasiswa rantau Magetan...',
+          logo: 'Logo IMAMA merepresentasikan dua sisi...',
+          philosophy: 'Filosofi kami adalah "Rantau Terikat, Karya Terbuka"...',
+          vision: 'Menjadi organisasi mahasiswa Magetan yang progresif...'
+        },
+        departments: [
+          { name: 'BPH', color: 'from-emerald-500 to-emerald-700', desc: 'Koordinasi strategis', leader: 'Ahmad Fulan', members: 42, icon: '🛡️' },
+          { name: 'DPM', color: 'from-slate-500 to-slate-700', desc: 'Pengawasan kebijakan', leader: 'Nadia Hapsari', members: 18, icon: '📜' }
+        ],
+        officers: [
+          { name: 'Ahmad Fulan', role: 'Ketua Umum', major: 'Teknik Informatika', batch: '2024', dept: 'BPH', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?auto=format&fit=crop&w=600&q=80' },
+          { name: 'Nadia Hapsari', role: 'Sekretaris', major: 'Manajemen', batch: '2024', dept: 'DPM', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80' }
+        ],
+        programs: [
+          { title: 'Makrab Solidaritas', icon: '🔥', text: 'Gathering hangat untuk memperkuat ikatan rantau' }
+        ],
+        news: [
+          { title: 'Pelatihan Kepemimpinan Rantau', date: 'Mei 2025', category: 'Program Kerja', image: 'https://images.unsplash.com/photo-1515162305289-2c51f1d9e5f2?auto=format&fit=crop&w=800&q=80' }
+        ],
+        gallery: [
+          'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=80'
+        ],
+        timeline: [
+          { year: '2020', event: 'IMAMA berdiri sebagai organisasi mahasiswa rantau Magetan di UNESA.' }
+        ],
+        contact: {
+          whatsapp: '+6281234567890',
+          instagram: 'imama.magetan',
+          email: 'admin@imamaunesa.org',
+          address: 'Sekretariat IMAMA UNESA, Surabaya'
+        },
+        stats: [
+          { label: 'Anggota Aktif', value: '200+' },
+          { label: 'Departemen', value: '7' }
+        ]
+      };
+      
+      localStorage.setItem('imamaSiteData', JSON.stringify(testData));
+      alert('✓ Test data loaded!');
+      updateInfo();
+    }
+
+    function viewData() {
+      const data = localStorage.getItem('imamaSiteData');
+      if (data) {
+        console.log('📊 SITE DATA:', JSON.parse(data));
+        alert('✓ Check console (F12) untuk lihat data lengkap');
+      } else {
+        alert('❌ Tidak ada data');
+      }
+    }
+
+    function downloadData() {
+      const data = localStorage.getItem('imamaSiteData');
+      if (!data) {
+        alert('❌ Tidak ada data untuk didownload');
+        return;
+      }
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `imama-data-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    updateInfo();
+  </script>
+</body>
+</html>

@@ -205,32 +205,77 @@ app.delete('/api/staff/:id', (req, res) => {
     });
 });
 
-// Maintenance: Clear Data
-app.post('/api/clear-data', (req, res) => {
-    db.query('DELETE FROM events', (err) => {
-        if (err) return res.status(500).send(err);
-        db.query('DELETE FROM gallery', (err) => {
+// Routes: Export All Data
+app.get('/api/export-all', (req, res) => {
+    const tables = ['about', 'settings', 'hero_slides', 'events', 'gallery', 'staff'];
+    const data = {};
+    let completed = 0;
+
+    tables.forEach(table => {
+        db.query(`SELECT * FROM ${table}`, (err, results) => {
             if (err) return res.status(500).send(err);
-            res.json({ success: true });
+            data[table] = results;
+            completed++;
+            if (completed === tables.length) {
+                res.json(data);
+            }
         });
     });
 });
 
-// Maintenance: Bulk Import
-app.post('/api/bulk-import', (req, res) => {
-    const { about, events, gallery } = req.body;
-    if(about) db.query('UPDATE about SET content = ? WHERE id = 1', [about]);
-    
-    if(events && events.length > 0) {
-        const eventValues = events.map(e => [e.title, e.category || 'Umum', e.desc, e.date, e.image]);
-        db.query('INSERT INTO events (title, category, description, event_date, image_data) VALUES ?', [eventValues]);
-    }
+// Maintenance: Clear Data
+app.post('/api/clear-data', (req, res) => {
+    const tables = ['events', 'gallery', 'hero_slides', 'staff'];
+    const queries = tables.map(t => new Promise((rel, rej) => {
+        db.query(`DELETE FROM ${t}`, (err) => err ? rej(err) : rel());
+    }));
 
-    if(gallery && gallery.length > 0) {
-        const galleryValues = gallery.map(g => [g.image, g.caption]);
-        db.query('INSERT INTO gallery (image_data, caption) VALUES ?', [galleryValues]);
-    }
-    res.json({ success: true });
+    Promise.all(queries)
+        .then(() => res.json({ success: true }))
+        .catch(err => res.status(500).send(err));
+});
+
+// Maintenance: Bulk Import
+app.post('/api/bulk-import', async (req, res) => {
+    const data = req.body;
+    
+    try {
+        // Update About
+        if (data.about && data.about.length > 0) {
+            db.query('UPDATE about SET content = ? WHERE id = 1', [data.about[0].content || data.about]);
+        }
+
+        // Update Settings
+        if (data.settings) {
+            const settings = Array.isArray(data.settings) ? data.settings : Object.entries(data.settings).map(([k,v]) => ({s_key:k, s_value:v}));
+            settings.forEach(s => db.query('REPLACE INTO settings (s_key, s_value) VALUES (?, ?)', [s.s_key, s.s_value]));
+        }
+
+        // Insert Tables
+        if (data.events?.length) {
+            const vals = data.events.map(e => [e.title, e.category, e.description || e.desc, e.event_date || e.date, e.image_data || e.image]);
+            db.query('INSERT INTO events (title, category, description, event_date, image_data) VALUES ?', [vals]);
+        }
+
+        if (data.gallery?.length) {
+            const vals = data.gallery.map(g => [g.image_data || g.image, g.caption]);
+            db.query('INSERT INTO gallery (image_data, caption) VALUES ?', [vals]);
+        }
+
+        if (data.hero_slides?.length) {
+            const vals = data.hero_slides.map(h => [h.image_data || h.image]);
+            db.query('INSERT INTO hero_slides (image_data) VALUES ?', [vals]);
+        }
+
+        if (data.staff?.length) {
+            const vals = data.staff.map(s => [s.name, s.position, s.department, s.image_data || s.image]);
+            db.query('INSERT INTO staff (name, position, department, image_data) VALUES ?', [vals]);
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).send(err);
+    });
 });
 
 // Route: Login Admin

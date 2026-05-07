@@ -11,6 +11,7 @@
   <style>body { font-family: Inter, system-ui, sans-serif; }</style>
 </head>
 <body>
+  <script src="api.js"></script>
   <div id="admin-root"></div>
 
   <script type="text/babel">
@@ -82,10 +83,26 @@
         }
       };
 
-      const saveData = () => {
-        localStorage.setItem('imamaSiteData', JSON.stringify(data));
-        setMessage('✓ Tersimpan. Refresh halaman utama untuk melihat perubahan.');
-        setTimeout(() => setMessage(''), 3000);
+      const saveData = async () => {
+        try {
+          setMessage('⏳ Menyimpan ke database...');
+          
+          // Kita kirim data ke backend. 
+          // Kita sesuaikan nama field agar sinkron dengan tabel MySQL
+          const syncData = {
+            ...data,
+            events: data.news,    // Frontend 'news' -> Backend 'events'
+            staff: data.officers  // Frontend 'officers' -> Backend 'staff'
+          };
+
+          await ApiService.bulkImport(syncData);
+          
+          localStorage.setItem('imamaSiteData', JSON.stringify(data));
+          setMessage('✓ Berhasil! Data tersimpan di Cloud. Semua perangkat sekarang bisa melihat perubahan.');
+        } catch (err) {
+          setMessage('❌ Gagal menyimpan ke server: ' + err.message);
+        }
+        setTimeout(() => setMessage(''), 5000);
       };
 
       const resetData = () => {
@@ -95,6 +112,49 @@
           setMessage('Data reset ke default.');
           setTimeout(() => setMessage(''), 2000);
         }
+      };
+
+      const exportData = async () => {
+        try {
+          const fullData = await ApiService.exportAll();
+          const dataStr = JSON.stringify(fullData, null, 2);
+          const blob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `imama-database-sync-${new Date().toISOString().slice(0, 10)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          setMessage('✓ Database berhasil diexport!');
+        } catch (err) {
+          setMessage('❌ Gagal export: ' + err.message);
+        }
+        setTimeout(() => setMessage(''), 3000);
+      };
+
+      const importData = async () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              try {
+                const imported = JSON.parse(event.target.result);
+                setData(imported);
+                localStorage.setItem('imamaSiteData', JSON.stringify(imported));
+                setMessage('✓ Data berhasil diimport! Refresh halaman utama untuk melihat.');
+                setTimeout(() => setMessage(''), 3000);
+              } catch (err) {
+                setMessage('❌ File JSON tidak valid: ' + err.message);
+              }
+            };
+            reader.readAsText(file);
+          }
+        };
+        input.click();
       };
 
       const addItem = (key) => {
@@ -114,30 +174,53 @@
       };
 
       const deleteItem = (key, idx) => {
-        setData({ ...data, [key]: data[key].filter((_, i) => i !== idx) });
+        const updated = [...data[key]];
+        updated.splice(idx, 1);
+        setData({ ...data, [key]: updated });
       };
 
       const updateItem = (key, idx, field, value) => {
         const updated = [...data[key]];
-        updated[idx] = { ...updated[idx], [field]: value };
+        if (Array.isArray(updated[idx])) {
+          updated[idx] = value;
+        } else {
+          updated[idx] = { ...updated[idx], [field]: value };
+        }
         setData({ ...data, [key]: updated });
       };
 
       const handleImageUpload = (e, key, idx, field) => {
         const file = e.target.files[0];
+        if (file && file.size > 5242880) {
+          setMessage('⚠️ Foto terlalu besar (max 5MB)');
+          return;
+        }
         if (file) {
           const reader = new FileReader();
           reader.onload = (event) => {
             const base64 = event.target.result;
-            if (key === 'gallery') {
-              const updated = [...data.gallery];
-              updated[idx] = base64;
-              setData({ ...data, gallery: updated });
-            } else {
-              updateItem(key, idx, field, base64);
+            try {
+              if (key === 'gallery') {
+                setData(prev => {
+                  const updated = [...prev.gallery];
+                  updated[idx] = base64;
+                  return { ...prev, gallery: updated };
+                });
+              } else if (key === 'officers' || key === 'news') {
+                setData(prev => {
+                  const updated = [...prev[key]];
+                  updated[idx] = { ...updated[idx], [field]: base64 };
+                  return { ...prev, [key]: updated };
+                });
+              }
+              setMessage(`✓ Foto diupload (${(file.size / 1024).toFixed(1)}KB)`);
+              setTimeout(() => setMessage(''), 2000);
+            } catch (err) {
+              setMessage('❌ Error upload foto');
             }
-            setMessage(`✓ Foto diupload (${(file.size / 1024).toFixed(1)}KB)`);
-            setTimeout(() => setMessage(''), 2000);
+          };
+          reader.onerror = () => {
+            setMessage('❌ Gagal membaca file');
           };
           reader.readAsDataURL(file);
         }
@@ -305,10 +388,10 @@
                         <button onClick={() => deleteItem('gallery', idx)} className="text-red-600 text-sm px-3 py-1 hover:bg-red-50 rounded-full">Hapus</button>
                       </div>
                       <div className="space-y-3">
-                        <div><label className="text-xs font-semibold block mb-2 text-slate-600">Upload atau Paste URL</label><div className="flex gap-2"><input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'gallery', idx)} className="flex-1" /></div></div>
-                        <div className="text-xs text-slate-500">atau</div>
-                        <input type="text" value={img.startsWith('data:') ? '(Foto tersimpan lokal)' : img} onChange={e => !img.startsWith('data:') && updateItem('gallery', idx, 0, e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Paste URL gambar..." disabled={img.startsWith('data:')} />
-                        {img.startsWith('data:') && <div className="text-xs text-emerald-600">✓ Foto disimpan lokal</div>}
+                        <div><label className="text-xs font-semibold block mb-2 text-slate-600">Upload Foto</label><input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'gallery', idx)} className="w-full" /></div>
+                        <div className="text-xs text-slate-500 text-center">--- atau paste URL ---</div>
+                        <input type="text" value={img.startsWith('data:') ? '(Foto disimpan lokal)' : img} onChange={e => !img.startsWith('data:') && setData(prev => { const g = [...prev.gallery]; g[idx] = e.target.value; return {...prev, gallery: g}; })} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="https://..." disabled={img.startsWith('data:')} />
+                        {img.startsWith('data:') && <div className="text-xs text-emerald-600">✓ Tersimpan lokal</div>}
                       </div>
                     </div>
                   ))}
@@ -355,10 +438,23 @@
                   ))}
                 </>
               )}
+
+              {!['hero', 'about', 'contact', 'stats', 'departments', 'officers', 'programs', 'news', 'gallery', 'timeline'].includes(tab) && (
+                <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+                  <h3 className="font-semibold mb-2">📊 Sinkronisasi Data</h3>
+                  <p className="text-sm text-slate-600 mb-4">Gunakan fitur ini untuk sync data antar HP/Laptop:</p>
+                  <div className="flex gap-3 flex-wrap">
+                    <button onClick={exportData} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">⬇️ Export Data</button>
+                    <button onClick={importData} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">⬆️ Import Data</button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="fixed bottom-6 right-6 flex gap-3">
               <button onClick={saveData} className="px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-700 shadow-lg">✓ Simpan</button>
+              <button onClick={exportData} className="px-4 py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 shadow-lg text-sm" title="Download data sebagai JSON">⬇️</button>
+              <button onClick={importData} className="px-4 py-2 bg-green-600 text-white rounded-full font-semibold hover:bg-green-700 shadow-lg text-sm" title="Upload data dari JSON">⬆️</button>
               <button onClick={resetData} className="px-6 py-3 bg-slate-600 text-white rounded-full font-semibold hover:bg-slate-700 shadow-lg">↺ Reset</button>
             </div>
           </div>
