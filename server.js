@@ -28,6 +28,16 @@ const db = mysql.createPool({
     queueLimit: 0
 });
 
+// Route Login Admin
+app.post('/api/login', (req, res) => {
+    const { password } = req.body;
+    if (password === (process.env.ADMIN_PASS || 'imama123')) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false, message: 'Password salah' });
+    }
+});
+
 // Test koneksi database
 db.getConnection((err, connection) => {
     if (err) console.error('Database connection failed:', err);
