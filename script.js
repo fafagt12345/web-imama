@@ -69,13 +69,13 @@ async function loadSettings() {
     if(document.getElementById('displayEmail')) document.getElementById('displayEmail').textContent = settings.email;
     if(document.getElementById('displayIg')) document.getElementById('displayIg').textContent = settings.instagram;
     if(document.getElementById('heroTitleDisplay')) document.getElementById('heroTitleDisplay').textContent = settings.hero_title;
-    if(document.getElementById('heroSubtitleDisplay')) document.getElementById('heroSubtitleDisplay').textContent = settings.hero_subtitle;
+    if(document.getElementById('heroSubtitleDisplay')) document.getElementById('heroSubtitleDisplay').innerHTML = settings.hero_subtitle.replace(/\n/g, '<br>');
 }
 
 async function loadAbout() {
     const content = await ApiService.getAbout();
     const el = document.getElementById('aboutContent');
-    if(el) el.textContent = content;
+    if(el) el.innerHTML = content.replace(/\n/g, '<br>');
     return content;
 }
 

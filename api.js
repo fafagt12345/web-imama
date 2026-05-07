@@ -1,106 +1,137 @@
 /**
- * API Service Provider
- * Sekarang terhubung ke Backend Server (MySQL).
+ * ApiService statis untuk website IMAMA UNESA.
+ * Tujuan: membuat halaman berjalan normal tanpa backend saat deploy di Vercel.
  */
 
-// Menggunakan path relatif agar otomatis menyesuaikan dengan domain tempat web di-deploy
-// Di lokal akan ke localhost:3000/api, di Vercel akan ke domain-anda.com/api
-const API_URL = window.location.origin.includes('localhost') 
-    ? 'http://localhost:3000/api' 
-    : '/api';
-
-/**
- * Helper untuk menangani request fetch agar lebih bersih
- */
-async function request(path, options = {}) {
-    const res = await fetch(`${API_URL}${path}`, {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers
+const staticData = {
+    settings: {
+        email: 'imama.unesa@example.com',
+        instagram: 'imama_unesa',
+        hero_title: 'IMAMA UNESA',
+        hero_subtitle: 'Ikatan Mahasiswa Manajemen Akuntansi\nUniversitas Negeri Surabaya'
+    },
+    about: 'IMAMA UNESA adalah organisasi mahasiswa Program Studi Manajemen Akuntansi di Universitas Negeri Surabaya. Kami aktif menyelenggarakan kegiatan akademik dan non-akademik untuk mendukung perkembangan mahasiswa dan membangun jejaring profesional.',
+    heroSlides: [
+        'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80'
+    ],
+    events: [
+        {
+            id: 1,
+            title: 'Pelatihan Public Speaking',
+            category: 'Kegiatan',
+            desc: 'Pelatihan public speaking untuk meningkatkan kemampuan presentasi dan komunikasi efektif bagi anggota IMAMA UNESA.',
+            date: '2025-04-12',
+            image: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=800&q=80'
+        },
+        {
+            id: 2,
+            title: 'Workshop Akuntansi Digital',
+            category: 'Seminar',
+            desc: 'Workshop praktik akuntansi modern dengan software akuntansi untuk mempersiapkan mahasiswa menghadapi dunia kerja.',
+            date: '2025-06-03',
+            image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80'
         }
-    });
-    if (!res.ok) {
-        const error = await res.json().catch(() => ({ message: 'Terjadi kesalahan server' }));
-        throw new Error(error.message || 'Gagal mengambil data');
-    }
-    return res.json();
-}
+    ],
+    gallery: [
+        {
+            id: 1,
+            image: 'https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=800&q=80',
+            caption: 'Kegiatan bersama IMAMA'
+        },
+        {
+            id: 2,
+            image: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=800&q=80',
+            caption: 'Seminar dan workshop'
+        }
+    ],
+    staff: [
+        { id: 1, name: 'Nadia Hapsari', position: 'Ketua Umum', department: 'BPH', image_data: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80' },
+        { id: 2, name: 'Rian Pratama', position: 'Bendahara', department: 'BPH', image_data: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80' },
+        { id: 3, name: 'Siti Anisa', position: 'Koordinator Infokom', department: 'INFOKOM', image_data: 'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=600&q=80' }
+    ]
+};
 
 const ApiService = {
-    // Mengambil data "Tentang Kami"
     async getAbout() {
-        return request('/about');
+        return Promise.resolve(staticData.about);
     },
 
-    // Mengambil pengaturan website
     async getSettings() {
-        return request('/settings');
+        return Promise.resolve(staticData.settings);
     },
 
-    // Update pengaturan
     async updateSettings(settings) {
-        return request('/settings', { method: 'POST', body: JSON.stringify(settings) });
+        Object.assign(staticData.settings, settings);
+        return Promise.resolve({ success: true });
     },
 
-    // Hero Slides Management
     async getHeroSlides() {
-        return request('/hero');
+        return Promise.resolve(staticData.heroSlides.map(image => ({ image_data: image })));
     },
 
     async addHeroSlide(image) {
-        return request('/hero', { method: 'POST', body: JSON.stringify({ image }) });
+        staticData.heroSlides.unshift(image);
+        return Promise.resolve({ success: true });
     },
 
     async deleteHeroSlide(id) {
-        return request(`/hero/${id}`, { method: 'DELETE' });
+        return Promise.resolve({ success: true });
     },
 
     async updateAbout(text) {
-        return request('/about', { method: 'POST', body: JSON.stringify({ content: text }) });
+        staticData.about = text;
+        return Promise.resolve({ success: true });
     },
 
     async getEvents() {
-        return request('/events');
+        return Promise.resolve(staticData.events);
     },
 
     async addEvent(eventData) {
-        return request('/events', { method: 'POST', body: JSON.stringify(eventData) });
+        staticData.events.unshift({ id: Date.now(), ...eventData });
+        return Promise.resolve({ success: true });
     },
 
     async deleteEvent(id) {
-        return request(`/events/${id}`, { method: 'DELETE' });
+        staticData.events = staticData.events.filter(e => e.id !== id);
+        return Promise.resolve({ success: true });
     },
 
     async getGallery() {
-        return request('/gallery');
+        return Promise.resolve(staticData.gallery);
     },
 
     async addGallery(galleryData) {
-        return request('/gallery', { method: 'POST', body: JSON.stringify(galleryData) });
+        staticData.gallery.unshift({ id: Date.now(), ...galleryData });
+        return Promise.resolve({ success: true });
     },
 
     async deleteGallery(id) {
-        return request(`/gallery/${id}`, { method: 'DELETE' });
+        staticData.gallery = staticData.gallery.filter(g => g.id !== id);
+        return Promise.resolve({ success: true });
     },
 
     async getStaff() {
-        return request('/staff');
+        return Promise.resolve(staticData.staff);
     },
 
     async addStaff(staffData) {
-        return request('/staff', { method: 'POST', body: JSON.stringify(staffData) });
+        staticData.staff.push({ id: Date.now(), ...staffData });
+        return Promise.resolve({ success: true });
     },
 
     async deleteStaff(id) {
-        return request(`/staff/${id}`, { method: 'DELETE' });
+        staticData.staff = staticData.staff.filter(s => s.id !== id);
+        return Promise.resolve({ success: true });
     },
 
     async bulkImport(data) {
-        return request('/bulk-import', { method: 'POST', body: JSON.stringify(data) });
+        return Promise.resolve({ success: true });
     },
 
     async clearData() {
-        return request('/clear-data', { method: 'POST' });
+        return Promise.resolve({ success: true });
     }
 };
