@@ -14,7 +14,7 @@ function formatDate(dateStr) {
 }
 
 // Gambar default jika tidak ada upload
-const DEFAULT_IMG = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect fill="%23667eea" width="400" height="200"/><text fill="white" x="50%" y="50%" text-anchor="middle">IMAMA UNESA</text></svg>';
+const DEFAULT_IMG = '';
 
 // Fitur Slide Otomatis Hero
 async function initHeroSlider() {
