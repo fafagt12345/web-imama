@@ -209,15 +209,19 @@ function AdminApp() {
     const payload = toRemotePayload(data);
     try {
       setMessage('⏳ Menyimpan ke server...');
+      console.log('Sending payload to server:', payload);
       const result = await ApiService.bulkImport(payload);
+      console.log('Server response:', result);
       saveLocalData(data);
       setMessage(result.message || '✓ Data tersimpan di server. Perubahan akan muncul di semua perangkat secara real-time.');
     } catch (error) {
-      console.error('Save failed', error);
+      console.error('Save failed - Full error:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       saveLocalData(data);
-      setMessage(`❌ Gagal menyimpan ke server: ${error.message}`);
+      setMessage(`❌ Error: ${error.message || 'Gagal menyimpan ke server'}`);
     }
-    setTimeout(() => setMessage(''), 5000);
+    setTimeout(() => setMessage(''), 7000);
   };
 
   const handleExport = () => {
