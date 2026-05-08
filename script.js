@@ -180,6 +180,17 @@ async function initApp() {
     await loadEvents(); // Load daftar kegiatan
     await loadStaff(); // Load pengurus
     await loadGallery(); // Load galeri foto
+
+    // Polling untuk update real-time setiap 30 detik
+    setInterval(async () => {
+        await loadSettings();
+        await loadAbout();
+        await loadEvents();
+        await loadStaff();
+        await loadGallery();
+        // Reload hero slider jika diperlukan
+        await initHeroSlider();
+    }, 30000); // 30 detik
 }
 
 document.addEventListener('DOMContentLoaded', initApp);

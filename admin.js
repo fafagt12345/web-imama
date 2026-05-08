@@ -211,7 +211,7 @@ function AdminApp() {
       setMessage('⏳ Menyimpan ke server...');
       await ApiService.bulkImport(payload);
       saveLocalData(data);
-      setMessage('✓ Data tersimpan di server. Perangkat lain akan melihat perubahan setelah refresh.');
+      setMessage('✓ Data tersimpan di server. Perubahan akan muncul di semua perangkat secara real-time.');
     } catch (error) {
       console.error('Save failed', error);
       saveLocalData(data);
