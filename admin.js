@@ -209,13 +209,13 @@ function AdminApp() {
     const payload = toRemotePayload(data);
     try {
       setMessage('⏳ Menyimpan ke server...');
-      await ApiService.bulkImport(payload);
+      const result = await ApiService.bulkImport(payload);
       saveLocalData(data);
-      setMessage('✓ Data tersimpan di server. Perubahan akan muncul di semua perangkat secara real-time.');
+      setMessage(result.message || '✓ Data tersimpan di server. Perubahan akan muncul di semua perangkat secara real-time.');
     } catch (error) {
       console.error('Save failed', error);
       saveLocalData(data);
-      setMessage('❌ Gagal menyimpan ke server. Data tersimpan lokal.');
+      setMessage(`❌ Gagal menyimpan ke server: ${error.message}`);
     }
     setTimeout(() => setMessage(''), 5000);
   };

@@ -11,11 +11,19 @@ const ApiService = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password })
         });
-        return res.json();
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            throw new Error(data.message || data.error || 'Login gagal');
+        }
+        return data;
     },
     async exportAll() {
         const res = await fetch(`${API_URL}/export-all`);
-        return res.json();
+        const data = await res.json();
+        if (!res.ok || data.success === false) {
+            throw new Error(data.error || 'Gagal memuat data server');
+        }
+        return data;
     },
     async bulkImport(data) {
         const res = await fetch(`${API_URL}/bulk-import`, {
@@ -23,6 +31,10 @@ const ApiService = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        return res.json();
+        const result = await res.json();
+        if (!res.ok || result.success === false) {
+            throw new Error(result.error || 'Gagal menyimpan data ke server');
+        }
+        return result;
     }
 };
