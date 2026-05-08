@@ -64,52 +64,41 @@ async function initHeroSlider() {
     startAutoSlide();
 }
 
-async function loadSettings() {
-    const settings = await ApiService.getSettings();
-    if(document.getElementById('displayEmail')) document.getElementById('displayEmail').textContent = settings.email;
-    if(document.getElementById('displayIg')) document.getElementById('displayIg').textContent = settings.instagram;
-    if(document.getElementById('heroTitleDisplay')) document.getElementById('heroTitleDisplay').textContent = settings.hero_title;
-    if(document.getElementById('heroSubtitleDisplay')) document.getElementById('heroSubtitleDisplay').innerHTML = settings.hero_subtitle.replace(/\n/g, '<br>');
+async function updateSettings(settings) {
+    if(document.getElementById('displayEmail')) document.getElementById('displayEmail').textContent = settings.email || '';
+    if(document.getElementById('displayIg')) document.getElementById('displayIg').textContent = settings.instagram || '';
+    if(document.getElementById('heroTitleDisplay')) document.getElementById('heroTitleDisplay').textContent = settings.hero_title || '';
+    if(document.getElementById('heroSubtitleDisplay')) document.getElementById('heroSubtitleDisplay').innerHTML = (settings.hero_subtitle || '').replace(/\n/g, '<br>');
 }
 
-async function loadAbout() {
-    const content = await ApiService.getAbout();
+async function updateAbout(about) {
     const el = document.getElementById('aboutContent');
-    if(el) el.innerHTML = content.replace(/\n/g, '<br>');
-    return content;
+    if(el) el.innerHTML = (about.intro || '').replace(/\n/g, '<br>');
 }
 
-async function loadEvents() {
-    try {
-        const events = await ApiService.getEvents();
-        const container = document.getElementById('eventsContainer');
-        if(!container) return;
+async function updateEvents(events) {
+    const container = document.getElementById('eventsContainer');
+    if(!container) return;
 
-        if(events.length === 0) {
-            container.innerHTML = "<p>Belum ada kegiatan terbaru.</p>";
-            return;
-        }
-
-        container.innerHTML = events.map(event => `
-            <div class="event-card" onclick="showEventDetail('${event.id}')">
-                <img src="${event.image || DEFAULT_IMG}" class="event-image">
-                <div class="event-content">
-                    <span class="category-badge">${event.category || 'Umum'}</span>
-                    <h4>${event.title}</h4>
-                    <small>${formatDate(event.date)}</small>
-                    <p>${event.desc ? event.desc.substring(0, 60) : ''}...</p>
-                </div>
-            </div>
-        `).join('');
-
-    } catch (error) {
-        console.error("Gagal memuat kegiatan:", error);
-        document.getElementById('eventsContainer').innerHTML = "<p>Gagal terhubung ke server.</p>";
+    if(events.length === 0) {
+        container.innerHTML = "<p>Belum ada kegiatan terbaru.</p>";
+        return;
     }
+
+    container.innerHTML = events.map(event => `
+        <div class="event-card" onclick="showEventDetail('${event.id || event.title}')">
+            <img src="${event.image || event.image_data || DEFAULT_IMG}" class="event-image">
+            <div class="event-content">
+                <span class="category-badge">${event.category || 'Umum'}</span>
+                <h4>${event.title}</h4>
+                <small>${formatDate(event.date || event.event_date)}</small>
+                <p>${event.desc || event.description ? (event.desc || event.description).substring(0, 60) : ''}...</p>
+            </div>
+        </div>
+    `).join('');
 }
 
-async function loadStaff() {
-    const staff = await ApiService.getStaff();
+async function updateStaff(staff) {
     const container = document.getElementById('staffContainer');
     if(!container) return;
 
@@ -136,14 +125,13 @@ async function loadStaff() {
     }).join('');
 }
 
-async function loadGallery() {
-    const gallery = await ApiService.getGallery();
+async function updateGallery(gallery) {
     const container = document.getElementById('galleryContainer');
     if(!container) return;
 
     container.innerHTML = gallery.map(item => `
         <div class="gallery-item">
-            <img src="${item.image}" class="gallery-image">
+            <img src="${item.image || item.image_data || DEFAULT_IMG}" class="gallery-image">
             <div class="gallery-overlay">
                 <i class="fas fa-search-plus" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
                 <p style="font-weight: 500;">${item.caption || 'IMAMA Gallery'}</p>
@@ -153,17 +141,16 @@ async function loadGallery() {
 }
 
 async function showEventDetail(id) {
-    const events = await ApiService.getEvents();
-    const event = events.find(e => e.id == id);
+    const event = window.currentData.events.find(e => e.id == id || e.title == id);
     if(!event) return;
 
     const modalBody = document.getElementById('eventModalBody');
     modalBody.innerHTML = `
-        <img src="${event.image || DEFAULT_IMG}" style="width:100%; border-radius:10px;">
+        <img src="${event.image || event.image_data || DEFAULT_IMG}" style="width:100%; border-radius:10px;">
         <h2 style="margin-top:20px;">${event.title}</h2>
-        <p style="color:#667eea; font-weight:bold;">${formatDate(event.date)}</p>
+        <p style="color:#667eea; font-weight:bold;">${formatDate(event.date || event.event_date)}</p>
         <hr style="margin:15px 0;">
-        <p style="white-space: pre-wrap;">${event.desc}</p>
+        <p style="white-space: pre-wrap;">${event.desc || event.description}</p>
     `;
     document.getElementById('eventModal').style.display = 'block';
 }
@@ -172,25 +159,37 @@ window.onclick = (e) => {
     if(e.target.className === 'modal') e.target.style.display = 'none';
 };
 
+async function updateHero(slides) {
+    const hero = document.querySelector('.hero');
+    if(!hero || !slides.length) return;
+    const image = slides[0].image_data || slides[0].image || '';
+    hero.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("${image}")`;
+}
+
 // Fungsi Inisialisasi Utama
 async function initApp() {
-    await loadSettings(); // Load pengaturan (judul, email, dll)
-    await initHeroSlider(); // Jalankan slider hero
-    await loadAbout(); // Load konten tentang kami
-    await loadEvents(); // Load daftar kegiatan
-    await loadStaff(); // Load pengurus
-    await loadGallery(); // Load galeri foto
+    // Real-time listener for data
+    const { doc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js');
+    const docRef = doc(window.db, 'data', 'main');
+    onSnapshot(docRef, (docSnap) => {
+        const data = docSnap.exists() ? docSnap.data() : {
+            about: { intro: '', history: '', logo: '', philosophy: '', vision: '' },
+            settings: {},
+            hero_slides: [],
+            events: [],
+            gallery: [],
+            staff: [],
+            timeline: []
+        };
 
-    // Polling untuk update real-time setiap 30 detik
-    setInterval(async () => {
-        await loadSettings();
-        await loadAbout();
-        await loadEvents();
-        await loadStaff();
-        await loadGallery();
-        // Reload hero slider jika diperlukan
-        await initHeroSlider();
-    }, 30000); // 30 detik
+        // Update UI
+        updateSettings(data.settings);
+        updateAbout(data.about);
+        updateHero(data.hero_slides);
+        updateEvents(data.events);
+        updateStaff(data.staff);
+        updateGallery(data.gallery);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', initApp);

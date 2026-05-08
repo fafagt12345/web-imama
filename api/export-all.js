@@ -1,19 +1,24 @@
-const mysql = require('mysql2/promise');
+const admin = require('firebase-admin');
 
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-
-async function queryRows(sql, params = []) {
-  const [rows] = await db.execute(sql, params);
-  return rows;
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      type: "service_account",
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      client_id: process.env.FIREBASE_CLIENT_ID,
+      auth_uri: "https://accounts.google.com/o/oauth2/auth",
+      token_uri: "https://oauth2.googleapis.com/token",
+      auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+      client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL
+    }),
+    databaseURL: process.env.FIREBASE_DATABASE_URL
+  });
 }
+
+const db = admin.firestore();
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -21,24 +26,26 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Check if environment variables are set
-    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Database environment variables not configured. Please set DB_HOST, DB_USER, DB_PASSWORD, DB_NAME in Vercel.' 
+    // Check if Firebase is configured
+    if (!process.env.FIREBASE_PROJECT_ID) {
+      return res.status(500).json({
+        success: false,
+        error: 'Firebase environment variables not configured. Please set FIREBASE_PROJECT_ID, etc. in Vercel.'
       });
     }
 
-    const aboutRows = await queryRows('SELECT * FROM about LIMIT 1');
-    const settings = await queryRows('SELECT s_key, s_value FROM settings');
-    const hero_slides = await queryRows('SELECT * FROM hero_slides ORDER BY created_at DESC');
-    const events = await queryRows('SELECT * FROM events ORDER BY event_date DESC');
-    const gallery = await queryRows('SELECT * FROM gallery ORDER BY created_at DESC');
-    const staff = await queryRows('SELECT * FROM staff ORDER BY name ASC');
-    const timeline = await queryRows('SELECT * FROM timeline ORDER BY created_at DESC');
-    const settingsObj = {};
-    settings.forEach(row => { settingsObj[row.s_key] = row.s_value; });
-    res.status(200).json({ about: aboutRows[0] || { intro: '', history: '', logo: '', philosophy: '', vision: '' }, settings: settingsObj, hero_slides, events, gallery, staff, timeline });
+    const doc = await db.collection('data').doc('main').get();
+    const data = doc.exists ? doc.data() : {
+      about: { intro: '', history: '', logo: '', philosophy: '', vision: '' },
+      settings: {},
+      hero_slides: [],
+      events: [],
+      gallery: [],
+      staff: [],
+      timeline: []
+    };
+
+    res.status(200).json(data);
   } catch (err) {
     console.error('[export-all error]', err.message);
     res.status(500).json({ success: false, error: err.message });
