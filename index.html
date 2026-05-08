@@ -181,11 +181,11 @@
                 ...defaultData,
                 about: {
                   ...defaultData.about,
-                  intro: (raw.about?.intro || raw.about?.content) || defaultData.about.intro,
-                  history: raw.about?.history || defaultData.about.history,
-                  logo: raw.about?.logo || defaultData.about.logo,
-                  philosophy: raw.about?.philosophy || defaultData.about.philosophy,
-                  vision: raw.about?.vision || defaultData.about.vision
+                  intro: (rawData.about?.intro || rawData.about?.content) || defaultData.about.intro,
+                  history: rawData.about?.history || defaultData.about.history,
+                  logo: rawData.about?.logo || defaultData.about.logo,
+                  philosophy: rawData.about?.philosophy || defaultData.about.philosophy,
+                  vision: rawData.about?.vision || defaultData.about.vision
                 },
                 hero: {
                   ...defaultData.hero,
