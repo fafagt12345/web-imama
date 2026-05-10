@@ -51,14 +51,17 @@ function renderAllEditors() {
 
 // 3. Fungsi Simpan Global
 window.saveAllData = async function() {
-    // Update currentData dari input sebelum dikirim
+    // Pastikan objek ada
+    if (!currentData.hero) currentData.hero = {};
+    if (!currentData.about) currentData.about = {};
+    if (!currentData.settings) currentData.settings = {};
+
     currentData.hero.title = document.getElementById('heroTitle')?.value || '';
     currentData.hero.subtitle = document.getElementById('heroSubtitle')?.value || '';
     currentData.about.intro = document.getElementById('aboutText')?.value || '';
     currentData.about.history = document.getElementById('aboutHistory')?.value || '';
     currentData.about.vision = document.getElementById('aboutVision')?.value || '';
     
-    if (!currentData.settings) currentData.settings = {};
     currentData.settings.email = document.getElementById('contactEmail')?.value || '';
     currentData.settings.instagram = document.getElementById('contactIg')?.value || '';
     

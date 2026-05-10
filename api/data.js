@@ -41,7 +41,7 @@ export default async function handler(req, res) {
             }
 
             connection = await mysql.createConnection(dbConfig);
-            const content = JSON.stringify(data);
+            const content = JSON.stringify(data); // Menyimpan seluruh state admin
             await connection.execute(
                 'INSERT INTO site_settings (id, content) VALUES (1, ?) ON DUPLICATE KEY UPDATE content = ?',
                 [content, content]
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
             
             return res.status(200).json({ success: true });
         } catch (error) {
-            return res.status(500).json({ success: false, error: error.message });
+            return res.status(500).json({ success: false, error: "Gagal menyimpan ke Database: " + error.message });
         } finally {
             if (connection) await connection.end();
         }

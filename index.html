@@ -165,7 +165,7 @@
                 ...defaultData,
                 about: {
                   ...defaultData.about,
-                  intro: (rawData.about?.intro || rawData.about?.content) || defaultData.about.intro,
+                  intro: rawData.about?.intro || defaultData.about.intro,
                   history: rawData.about?.history || defaultData.about.history,
                   logo: rawData.about?.logo || defaultData.about.logo,
                   philosophy: rawData.about?.philosophy || defaultData.about.philosophy,
@@ -173,8 +173,8 @@
                 },
                 hero: {
                   ...defaultData.hero,
-                  title: rawData.settings?.hero_title || defaultData.hero.title,
-                  subtitle: rawData.settings?.hero_subtitle || defaultData.hero.subtitle
+                  title: rawData.hero?.title || rawData.settings?.hero_title || defaultData.hero.title,
+                  subtitle: rawData.hero?.subtitle || rawData.settings?.hero_subtitle || defaultData.hero.subtitle
                 },
                 contact: {
                   ...defaultData.contact,
