@@ -57,11 +57,10 @@ async function loadData() {
         const response = await fetch(API_URL);
         if (response.ok) {
             const serverData = await response.json();
-            if (serverData) {
-                currentData = serverData;
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
-                renderAllEditors();
-            }
+            // Gunakan defaultData jika server kosong
+            currentData = serverData ? { ...defaultData, ...serverData } : { ...defaultData };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+            renderAllEditors();
         }
     } catch (error) {
         console.error("Gagal memuat data dari server:", error);
@@ -120,18 +119,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function renderAllEditors() {
+    if (!currentData) return;
+
     // About Section
-    const aboutText = document.getElementById('aboutText');
-    if (aboutText) aboutText.value = currentData.about.intro;
+    if (document.getElementById('aboutText')) 
+        document.getElementById('aboutText').value = currentData.about?.intro || '';
     
-    const aboutHistory = document.getElementById('aboutHistory');
-    if (aboutHistory) aboutHistory.value = currentData.about?.history || '';
+    if (document.getElementById('aboutHistory')) 
+        document.getElementById('aboutHistory').value = currentData.about?.history || '';
+
+    if (document.getElementById('aboutVision')) 
+        document.getElementById('aboutVision').value = currentData.about?.vision || '';
 
     // Hero Section
-    const heroTitle = document.getElementById('heroTitle');
-    if (heroTitle) heroTitle.value = currentData.settings?.hero_title || currentData.hero?.title || '';
+    if (document.getElementById('heroTitle')) 
+        document.getElementById('heroTitle').value = currentData.settings?.hero_title || currentData.hero?.title || '';
+
+    if (document.getElementById('heroSubtitle'))
+        document.getElementById('heroSubtitle').value = currentData.settings?.hero_subtitle || currentData.hero?.subtitle || '';
+
+    // Contact Settings
+    if (document.getElementById('contactEmail'))
+        document.getElementById('contactEmail').value = currentData.settings?.email || currentData.contact?.email || '';
     
-    // Render list (Events, Staff, dll) jika ada kontainer list-nya
+    if (document.getElementById('contactIg'))
+        document.getElementById('contactIg').value = currentData.settings?.instagram || currentData.contact?.instagram || '';
+    
     console.log("Panel Admin diperbarui dengan data terbaru dari server");
 }
 

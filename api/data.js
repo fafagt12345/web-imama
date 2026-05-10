@@ -19,7 +19,8 @@ export default async function handler(req, res) {
             }
             return res.status(200).json(null);
         } catch (error) {
-            return res.status(500).json({ error: error.message });
+            console.error('Database Error:', error);
+            return res.status(500).json({ error: "Gagal koneksi database: " + error.message });
         } finally {
             if (connection) await connection.end();
         }
@@ -41,6 +42,7 @@ export default async function handler(req, res) {
 
             connection = await mysql.createConnection(dbConfig);
             const content = JSON.stringify(data);
+            // Pastikan tabel site_settings sudah ada di database Anda
             await connection.execute(
                 'INSERT INTO site_settings (id, content) VALUES (1, ?) ON DUPLICATE KEY UPDATE content = ?',
                 [content, content]
