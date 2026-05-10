@@ -17,10 +17,11 @@ export default async function handler(req, res) {
             if (rows.length > 0) {
                 return res.status(200).json(JSON.parse(rows[0].content));
             }
-            return res.status(200).json(null); 
+            // Jika tabel kosong, kirim null agar frontend pakai defaultData
+            return res.status(200).json(null);
         } catch (error) {
             console.error('Database Error:', error);
-            return res.status(500).json({ error: "Gagal koneksi database. Pastikan DB_HOST bukan 127.0.0.1 di Vercel." });
+            return res.status(500).json({ error: "Gagal koneksi database. Pastikan DB_HOST bukan 127.0.0.1 di Vercel. Detail: " + error.message });
         } finally {
             if (connection) await connection.end();
         }
@@ -49,7 +50,7 @@ export default async function handler(req, res) {
             
             return res.status(200).json({ success: true });
         } catch (error) {
-            return res.status(500).json({ success: false, error: "Database simpan error: " + error.message });
+            return res.status(500).json({ success: false, error: "Database simpan error. Detail: " + error.message });
         } finally {
             if (connection) await connection.end();
         }
