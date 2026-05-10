@@ -22,9 +22,10 @@ async function initHeroSlider() {
     const dotsContainer = document.getElementById('heroDots');
     if(!hero || !dotsContainer) return;
 
-    const slides = await ApiService.getHeroSlides();
+    // Gunakan data dari window.currentData yang sudah dipoll
+    const slides = window.currentData?.hero_slides || [];
     const images = slides.length > 0 
-        ? slides.map(s => `url("${s.image_data}")`)
+        ? slides.map(s => `url("${s.image_data || s.image}")`)
         : [`url("https://images.unsplash.com/photo-1523240715630-991c2f746d24?auto=format&fit=crop&w=1200")`];
     
     let current = 0;
