@@ -64,82 +64,6 @@ async function initHeroSlider() {
     startAutoSlide();
 }
 
-async function updateSettings(settings) {
-    if(document.getElementById('displayEmail')) document.getElementById('displayEmail').textContent = settings.email || '';
-    if(document.getElementById('displayIg')) document.getElementById('displayIg').textContent = settings.instagram || '';
-    if(document.getElementById('heroTitleDisplay')) document.getElementById('heroTitleDisplay').textContent = settings.hero_title || '';
-    if(document.getElementById('heroSubtitleDisplay')) document.getElementById('heroSubtitleDisplay').innerHTML = (settings.hero_subtitle || '').replace(/\n/g, '<br>');
-}
-
-async function updateAbout(about) {
-    const el = document.getElementById('aboutContent');
-    if(el) el.innerHTML = (about.intro || '').replace(/\n/g, '<br>');
-}
-
-async function updateEvents(events) {
-    const container = document.getElementById('eventsContainer');
-    if(!container) return;
-
-    if(events.length === 0) {
-        container.innerHTML = "<p>Belum ada kegiatan terbaru.</p>";
-        return;
-    }
-
-    container.innerHTML = events.map(event => `
-        <div class="event-card" onclick="showEventDetail('${event.id || event.title}')">
-            <img src="${event.image || event.image_data || DEFAULT_IMG}" class="event-image">
-            <div class="event-content">
-                <span class="category-badge">${event.category || 'Umum'}</span>
-                <h4>${event.title}</h4>
-                <small>${formatDate(event.date || event.event_date)}</small>
-                <p>${event.desc || event.description ? (event.desc || event.description).substring(0, 60) : ''}...</p>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function updateStaff(staff) {
-    const container = document.getElementById('staffContainer');
-    if(!container) return;
-
-    const depts = ['BPH', 'DPM', 'INFOKOM', 'DBM', 'EKRAF', 'DPO', 'KORWIL'];
-    
-    container.innerHTML = depts.map(dept => {
-        const members = staff.filter(s => s.department === dept);
-        if(members.length === 0) return '';
-
-        return `
-            <div class="dept-section">
-                <h3 class="dept-title">${dept}</h3>
-                <div class="staff-grid">
-                    ${members.map(m => `
-                        <div class="staff-card">
-                            <img src="${m.image_data || DEFAULT_IMG}" class="staff-img">
-                            <span class="staff-name">${m.name}</span>
-                            <span class="staff-pos">${m.position}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-async function updateGallery(gallery) {
-    const container = document.getElementById('galleryContainer');
-    if(!container) return;
-
-    container.innerHTML = gallery.map(item => `
-        <div class="gallery-item">
-            <img src="${item.image || item.image_data || DEFAULT_IMG}" class="gallery-image">
-            <div class="gallery-overlay">
-                <i class="fas fa-search-plus" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
-                <p style="font-weight: 500;">${item.caption || 'IMAMA Gallery'}</p>
-            </div>
-        </div>
-    `).join('');
-}
-
 async function showEventDetail(id) {
     const event = window.currentData.events.find(e => e.id == id || e.title == id);
     if(!event) return;
@@ -159,37 +83,100 @@ window.onclick = (e) => {
     if(e.target.className === 'modal') e.target.style.display = 'none';
 };
 
-async function updateHero(slides) {
-    const hero = document.querySelector('.hero');
-    if(!hero || !slides.length) return;
-    const image = slides[0].image_data || slides[0].image || '';
-    hero.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("${image}")`;
-}
-
 // Fungsi Inisialisasi Utama
 async function initApp() {
-    // Real-time listener for data
-    const { doc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js');
-    const docRef = doc(window.db, 'data', 'main');
-    onSnapshot(docRef, (docSnap) => {
-        const data = docSnap.exists() ? docSnap.data() : {
-            about: { intro: '', history: '', logo: '', philosophy: '', vision: '' },
-            settings: {},
-            hero_slides: [],
-            events: [],
-            gallery: [],
-            staff: [],
-            timeline: []
-        };
+    // Load initial data from localStorage
+    try {
+        const rawData = await ApiService.exportAll();
+        await updateUI(rawData);
+        window.currentData = rawData;
+    } catch (err) {
+        console.error('Load data error:', err);
+    }
 
-        // Update UI
-        updateSettings(data.settings);
-        updateAbout(data.about);
-        updateHero(data.hero_slides);
-        updateEvents(data.events);
-        updateStaff(data.staff);
-        updateGallery(data.gallery);
-    });
+    // Poll for updates every 5 seconds
+    setInterval(async () => {
+        try {
+            const rawData = await ApiService.exportAll();
+            await updateUI(rawData);
+            window.currentData = rawData;
+        } catch (err) {
+            console.error('Poll error:', err);
+        }
+    }, 5000);
+}
+
+async function updateUI(data) {
+    // Settings
+    if(document.getElementById('displayEmail')) document.getElementById('displayEmail').textContent = data.settings?.email || '';
+    if(document.getElementById('displayIg')) document.getElementById('displayIg').textContent = data.settings?.instagram || '';
+    if(document.getElementById('heroTitleDisplay')) document.getElementById('heroTitleDisplay').textContent = data.settings?.hero_title || '';
+    if(document.getElementById('heroSubtitleDisplay')) document.getElementById('heroSubtitleDisplay').innerHTML = (data.settings?.hero_subtitle || '').replace(/\n/g, '<br>');
+
+    // About
+    const aboutEl = document.getElementById('aboutContent');
+    if(aboutEl) aboutEl.innerHTML = (data.about?.intro || '').replace(/\n/g, '<br>');
+
+    // Hero
+    const hero = document.querySelector('.hero');
+    if(hero && data.hero_slides?.length) {
+        const image = data.hero_slides[0].image_data || data.hero_slides[0].image || '';
+        if(image) hero.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url("${image}")`;
+    }
+
+    // Events
+    const eventsContainer = document.getElementById('eventsContainer');
+    if(eventsContainer) {
+        if(!data.events?.length) {
+            eventsContainer.innerHTML = "<p>Belum ada kegiatan terbaru.</p>";
+        } else {
+            eventsContainer.innerHTML = data.events.map(event => `
+                <div class="event-card">
+                    <img src="${event.image || event.image_data || ''}" class="event-image" onerror="this.style.display='none'">
+                    <div class="event-content">
+                        <span class="category-badge">${event.category || 'Umum'}</span>
+                        <h4>${event.title}</h4>
+                        <small>${formatDate(event.date || event.event_date)}</small>
+                        <p>${(event.desc || event.description || '').substring(0, 60)}...</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    // Staff
+    const staffContainer = document.getElementById('staffContainer');
+    if(staffContainer && data.staff?.length) {
+        const depts = ['BPH', 'DPM', 'INFOKOM', 'DBM', 'EKRAF', 'DPO', 'KORWIL'];
+        staffContainer.innerHTML = depts.map(dept => {
+            const members = data.staff.filter(s => s.department === dept);
+            if(members.length === 0) return '';
+            return `
+                <div class="dept-section">
+                    <h3 class="dept-title">${dept}</h3>
+                    <div class="staff-grid">
+                        ${members.map(m => `
+                            <div class="staff-card">
+                                <img src="${m.image_data || m.image || ''}" class="staff-img" onerror="this.style.display='none'">
+                                <span class="staff-name">${m.name}</span>
+                                <span class="staff-pos">${m.position}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Gallery
+    const galleryContainer = document.getElementById('galleryContainer');
+    if(galleryContainer && data.gallery?.length) {
+        galleryContainer.innerHTML = data.gallery.map(item => `
+            <div class="gallery-item">
+                <img src="${item.image || item.image_data || ''}" class="gallery-image" onerror="this.style.display='none'">
+            </div>
+        `).join('');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', initApp);

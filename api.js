@@ -1,40 +1,35 @@
 /**
- * ApiService untuk koneksi ke MySQL Backend.
+ * ApiService - Using localStorage only (no server needed)
  */
-
-const API_URL = window.location.origin.includes('localhost') ? 'http://localhost:3000/api' : '/api';
 
 const ApiService = {
     async login(password) {
-        const res = await fetch(`${API_URL}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-            throw new Error(data.message || data.error || 'Login gagal');
+        // Simple password check
+        const adminPass = localStorage.getItem('adminPassword') || 'imama123';
+        if (password === adminPass) {
+            return { success: true, message: 'Login berhasil' };
         }
-        return data;
+        throw new Error('Password salah');
     },
     async exportAll() {
-        const res = await fetch(`${API_URL}/export-all`);
-        const data = await res.json();
-        if (!res.ok || data.success === false) {
-            throw new Error(data.error || 'Gagal memuat data server');
+        // Get data from localStorage
+        const data = localStorage.getItem('imamaSiteData');
+        if (!data) {
+            return {
+                about: { intro: '', history: '', logo: '', philosophy: '', vision: '' },
+                settings: {},
+                hero_slides: [],
+                events: [],
+                gallery: [],
+                staff: [],
+                timeline: []
+            };
         }
-        return data;
+        return JSON.parse(data);
     },
     async bulkImport(data) {
-        const res = await fetch(`${API_URL}/bulk-import`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        if (!res.ok || result.success === false) {
-            throw new Error(result.error || 'Gagal menyimpan data ke server');
-        }
-        return result;
+        // Save data to localStorage
+        localStorage.setItem('imamaSiteData', JSON.stringify(data));
+        return { success: true, message: '✓ Data tersimpan. Halaman lain akan update otomatis dalam 5 detik.' };
     }
 };
