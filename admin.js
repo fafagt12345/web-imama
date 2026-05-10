@@ -109,20 +109,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (aboutForm) {
         aboutForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const text = document.getElementById('aboutText').value;
-            currentData.about.intro = text;
+            currentData.about.intro = document.getElementById('aboutText').value;
+            currentData.about.history = document.getElementById('aboutHistory')?.value || '';
+            currentData.about.vision = document.getElementById('aboutVision')?.value || '';
             saveToServer();
         });
     }
+    
+    // Tambahkan listener untuk form hero, kontak, dll sesuai kebutuhan
 });
 
 function renderAllEditors() {
-    // Fungsi ini untuk mengisi field input di admin.html dengan data terbaru
+    // About Section
     const aboutText = document.getElementById('aboutText');
     if (aboutText) aboutText.value = currentData.about.intro;
     
-    // Implementasikan pengisian field lainnya di sini...
-    console.log("Editor updated with latest data");
+    const aboutHistory = document.getElementById('aboutHistory');
+    if (aboutHistory) aboutHistory.value = currentData.about?.history || '';
+
+    // Hero Section
+    const heroTitle = document.getElementById('heroTitle');
+    if (heroTitle) heroTitle.value = currentData.settings?.hero_title || currentData.hero?.title || '';
+    
+    // Render list (Events, Staff, dll) jika ada kontainer list-nya
+    console.log("Panel Admin diperbarui dengan data terbaru dari server");
 }
 
 function loadLocalData() {}

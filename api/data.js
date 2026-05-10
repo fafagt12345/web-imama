@@ -6,6 +6,7 @@ export default async function handler(req, res) {
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
+        ssl: { rejectUnauthorized: false } // Penting untuk koneksi ke layanan cloud seperti Railway/PlanetScale
     });
 
     if (req.method === 'GET') {
@@ -14,7 +15,8 @@ export default async function handler(req, res) {
             if (rows.length > 0) {
                 return res.status(200).json(JSON.parse(rows[0].content));
             }
-            return res.status(404).json({ message: "No data found" });
+            // Jika kosong, kembalikan objek kosong agar frontend pakai defaultData
+            return res.status(200).json(null);
         } catch (error) {
             return res.status(500).json({ error: error.message });
         } finally {
@@ -23,11 +25,15 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const { password, data } = req.body;
+        const { password, data, action } = req.body;
 
         // Validasi Password Simple
         if (password !== process.env.ADMIN_PASS) {
             return res.status(401).json({ success: false, message: "Password salah!" });
+        }
+
+        if (action === 'login') {
+            return res.status(200).json({ success: true });
         }
 
         try {

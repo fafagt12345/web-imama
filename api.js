@@ -1,35 +1,38 @@
 /**
- * ApiService - Using localStorage only (no server needed)
+ * ApiService - Terhubung ke Vercel Serverless Function (MySQL)
  */
-
 const ApiService = {
     async login(password) {
-        // Simple password check
-        const adminPass = localStorage.getItem('adminPassword') || 'imama123';
-        if (password === adminPass) {
-            return { success: true, message: 'Login berhasil' };
-        }
-        throw new Error('Password salah');
+        const response = await fetch('/api/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password, data: null, action: 'login' })
+        });
+        const result = await response.json();
+        if (result.success) return result;
+        throw new Error(result.message || 'Login gagal');
     },
+
     async exportAll() {
-        // Get data from localStorage
-        const data = localStorage.getItem('imamaSiteData');
-        if (!data) {
-            return {
-                about: { intro: '', history: '', logo: '', philosophy: '', vision: '' },
-                settings: {},
-                hero_slides: [],
-                events: [],
-                gallery: [],
-                staff: [],
-                timeline: []
-            };
+        const response = await fetch('/api/data');
+        if (!response.ok) {
+            throw new Error('Gagal mengambil data dari server');
         }
-        return JSON.parse(data);
+        return await response.json();
     },
+
     async bulkImport(data) {
-        // Save data to localStorage
-        localStorage.setItem('imamaSiteData', JSON.stringify(data));
-        return { success: true, message: '✓ Data tersimpan. Halaman lain akan update otomatis dalam 5 detik.' };
+        const password = localStorage.getItem('imamaAdmin');
+        const response = await fetch('/api/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                password: password,
+                data: data
+            })
+        });
+        const result = await response.json();
+        if (result.success) return result;
+        throw new Error(result.message || 'Gagal menyimpan data');
     }
 };
