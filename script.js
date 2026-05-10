@@ -108,11 +108,12 @@ async function initApp() {
 }
 
 async function updateUI(data) {
+    if (!data) return;
     // Settings
     if(document.getElementById('displayEmail')) document.getElementById('displayEmail').textContent = data.settings?.email || '';
     if(document.getElementById('displayIg')) document.getElementById('displayIg').textContent = data.settings?.instagram || '';
-    if(document.getElementById('heroTitleDisplay')) document.getElementById('heroTitleDisplay').textContent = data.settings?.hero_title || '';
-    if(document.getElementById('heroSubtitleDisplay')) document.getElementById('heroSubtitleDisplay').innerHTML = (data.settings?.hero_subtitle || '').replace(/\n/g, '<br>');
+    if(document.getElementById('heroTitleDisplay')) document.getElementById('heroTitleDisplay').textContent = data.settings?.hero_title || data.hero?.title || '';
+    if(document.getElementById('heroSubtitleDisplay')) document.getElementById('heroSubtitleDisplay').innerHTML = (data.settings?.hero_subtitle || data.hero?.subtitle || '').replace(/\n/g, '<br>');
 
     // About
     const aboutEl = document.getElementById('aboutContent');

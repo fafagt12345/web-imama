@@ -54,19 +54,18 @@ let currentData = { ...defaultData };
 // 1. Fungsi Load Data dari Server
 async function loadData() {
     try {
-        const response = await fetch(API_URL);
-        if (response.ok) {
-            const serverData = await response.json();
-            // Gunakan defaultData jika server kosong
-            currentData = serverData ? { ...defaultData, ...serverData } : { ...defaultData };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
-            renderAllEditors();
-        }
+        const serverData = await ApiService.exportAll();
+        // Gabungkan data server dengan default agar tidak ada field yang hilang
+        currentData = serverData ? { ...defaultData, ...serverData } : { ...defaultData };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+        renderAllEditors();
     } catch (error) {
         console.error("Gagal memuat data dari server:", error);
         // Fallback ke local storage
         const local = localStorage.getItem(STORAGE_KEY);
         if (local) currentData = JSON.parse(local);
+        // PENTING: Tetap jalankan render agar halaman tidak kosong meskipun server mati
+        renderAllEditors();
     }
 }
 
