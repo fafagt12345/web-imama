@@ -1,65 +1,12 @@
-CREATE DATABASE IF NOT EXISTS db_imama;
-USE db_imama;
-
--- Tabel untuk data "Tentang Kami"
-CREATE TABLE IF NOT EXISTS about (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    intro TEXT NOT NULL,
-    content TEXT,
-    history TEXT,
-    logo TEXT,
-    philosophy TEXT,
-    vision TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-ALTER TABLE about ADD COLUMN IF NOT EXISTS content TEXT;
-ALTER TABLE about ADD COLUMN IF NOT EXISTS history TEXT;
-ALTER TABLE about ADD COLUMN IF NOT EXISTS logo TEXT;
-ALTER TABLE about ADD COLUMN IF NOT EXISTS philosophy TEXT;
-ALTER TABLE about ADD COLUMN IF NOT EXISTS vision TEXT;
-
--- Data awal untuk About
-INSERT INTO about (intro, content, history, logo, philosophy, vision)
-SELECT 'Selamat datang di IMAMA UNESA.', 'Selamat datang di IMAMA UNESA.', '', '', '', ''
-WHERE NOT EXISTS (SELECT 1 FROM about LIMIT 1);
-
--- Tabel untuk Slide Hero
-CREATE TABLE IF NOT EXISTS hero_slides (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    image_data LONGTEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tabel untuk Pengaturan Website (Kontak, Medsos, Title)
-CREATE TABLE IF NOT EXISTS settings (
-    s_key VARCHAR(50) PRIMARY KEY,
-    s_value TEXT
-);
-
-INSERT IGNORE INTO settings (s_key, s_value) VALUES 
-('email', 'imama.unesa@gmail.com'),
-('instagram', 'imama_unesa'),
-('hero_title', 'IMAMA UNESA'),
-('hero_subtitle', 'Ikatan Mahasiswa Manajemen Akuntansi Universitas Negeri Surabaya');
-
--- Tabel untuk Kegiatan/Events
-CREATE TABLE IF NOT EXISTS events (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(255) NOT NULL,
-    category VARCHAR(50) DEFAULT 'Umum',
-    description TEXT,
-    event_date DATE,
-    image_data LONGTEXT, -- Menyimpan string Base64 dari gambar
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tabel untuk Galeri
-CREATE TABLE IF NOT EXISTS gallery (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    image_data LONGTEXT NOT NULL,
     caption VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabel Utama untuk Sinkronisasi Real-time
+CREATE TABLE IF NOT EXISTS site_settings (
+    id INT PRIMARY KEY,
+    content LONGTEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Tabel untuk Pengurus (Staff)
