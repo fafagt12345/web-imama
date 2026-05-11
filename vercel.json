@@ -9,7 +9,8 @@
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.php" },
-    { "source": "/admin", "destination": "/admin.html" }
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/(.*)", "destination": "/$1" }
   ],
   "cleanUrls": true,
   "devCommand": "npm run dev"

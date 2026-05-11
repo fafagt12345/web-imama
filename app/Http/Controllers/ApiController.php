@@ -43,7 +43,9 @@ class ApiController extends Controller
     public function saveData(Request $request)
     {
         try {
-            $adminPass = env('ADMIN_PASS', 'imama123');
+            // Mengambil password dari env, jika tidak ada gunakan default imama123
+            $adminPass = env('ADMIN_PASS') ?: 'imama123';
+            
             if ($request->input('password') !== $adminPass) {
                 return response()->json(['success' => false, 'message' => 'Password salah!'], 401);
             }
@@ -74,13 +76,30 @@ class ApiController extends Controller
                 // 2. Sync Events
                 if (isset($data['events'])) {
                     Event::query()->delete();
-                    foreach ($data['events'] as $item) Event::create($item);
+                    foreach ($data['events'] as $item) {
+                        Event::create([
+                            'title' => $item['title'] ?? '',
+                            'description' => $item['description'] ?? ($item['desc'] ?? ''),
+                            'category' => $item['category'] ?? 'Umum',
+                            'date' => $item['date'] ?? ($item['event_date'] ?? null),
+                            'image' => $item['image'] ?? ($item['image_data'] ?? null),
+                        ]);
+                    }
                 }
 
                 // 3. Sync Staff
                 if (isset($data['staff'])) {
                     Staff::query()->delete();
-                    foreach ($data['staff'] as $item) Staff::create($item);
+                    foreach ($data['staff'] as $item) {
+                        Staff::create([
+                            'name' => $item['name'] ?? '',
+                            'position' => $item['position'] ?? '',
+                            'image' => $item['image'] ?? ($item['image_data'] ?? null),
+                            'department' => $item['department'] ?? 'BPH',
+                            'major' => $item['major'] ?? '',
+                            'batch' => $item['batch'] ?? '',
+                        ]);
+                    }
                 }
 
                 // 4. Sync Gallery
