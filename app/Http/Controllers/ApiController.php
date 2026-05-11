@@ -44,7 +44,7 @@ class ApiController extends Controller
     {
         try {
             $adminPass = config('app.admin_pass', env('ADMIN_PASS', 'imama123'));
-            if ($request->input('password') !== $adminPass) {
+            if ($request->password !== $adminPass) {
                 return response()->json(['success' => false, 'message' => 'Password salah!'], 401);
             }
 
