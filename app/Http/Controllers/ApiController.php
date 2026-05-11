@@ -43,8 +43,8 @@ class ApiController extends Controller
     public function saveData(Request $request)
     {
         try {
-            $adminPass = config('app.admin_pass', env('ADMIN_PASS', 'imama123'));
-            if ($request->password !== $adminPass) {
+            $adminPass = env('ADMIN_PASS', 'imama123');
+            if ($request->input('password') !== $adminPass) {
                 return response()->json(['success' => false, 'message' => 'Password salah!'], 401);
             }
 
@@ -74,26 +74,13 @@ class ApiController extends Controller
                 // 2. Sync Events
                 if (isset($data['events'])) {
                     Event::query()->delete();
-                    foreach ($data['events'] as $item) {
-                        Event::create([
-                            'title' => $item['title'] ?? '',
-                            'description' => $item['description'] ?? ($item['desc'] ?? ''),
-                            'category' => $item['category'] ?? 'Umum',
-                            'date' => $item['date'] ?? ($item['event_date'] ?? null),
-                            'image' => $item['image'] ?? ($item['image_data'] ?? null),
-                        ]);
-                    }
+                    foreach ($data['events'] as $item) Event::create($item);
                 }
 
                 // 3. Sync Staff
                 if (isset($data['staff'])) {
                     Staff::query()->delete();
-                    foreach ($data['staff'] as $item) {
-                        // Filter hanya data yang ada di fillable untuk keamanan
-                        Staff::create(collect($item)->only([
-                            'name', 'position', 'image', 'department', 'major', 'batch'
-                        ])->toArray());
-                    }
+                    foreach ($data['staff'] as $item) Staff::create($item);
                 }
 
                 // 4. Sync Gallery
@@ -101,7 +88,7 @@ class ApiController extends Controller
                     Gallery::query()->delete();
                     foreach ($data['gallery'] as $item) {
                         $url = is_array($item) ? ($item['image_url'] ?? ($item['image_data'] ?? '')) : $item;
-                        Gallery::create(['image_url' => $url]);
+                        if ($url) Gallery::create(['image_url' => $url]);
                     }
                 }
 

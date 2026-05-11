@@ -2,10 +2,7 @@ const ApiService = {
     async login(password) {
         const response = await fetch('/api/bulk-import', {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password, action: 'login' })
         });
         const result = await response.json();
