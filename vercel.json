@@ -1,19 +1,19 @@
 {
   "version": 2,
-  "buildCommand": "echo 'Building Laravel for Vercel...'",
-  "installCommand": "npm install",
-  "outputDirectory": ".",
-  "rewrites": [
-    { "source": "/api/export-all", "destination": "/api/index.php" },
-    { "source": "/api/bulk-import", "destination": "/api/index.php" }
-  ],
   "functions": {
-    "api/*.js": {
-      "runtime": "@vercel/node"
-    },
-    "api/*.php": {
+    "api/index.php": {
       "runtime": "vercel-php@0.6.0"
     }
   },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.php"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
   "devCommand": "npm run dev"
 }
