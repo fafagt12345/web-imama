@@ -8,11 +8,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.php" },
-    {
-      "source": "/((?!api/).*)",
-      "destination": "/$1"
-    }
+    { "source": "/api/(.*)", "destination": "/api/index.php" }
   ],
   "devCommand": "npm run dev"
 }
