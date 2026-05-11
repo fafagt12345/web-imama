@@ -2,14 +2,17 @@ const ApiService = {
     async login(password) {
         const response = await fetch('/api/bulk-import', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                password: password,
-            })
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ password, action: 'login' })
         });
         const result = await response.json();
-        if (result.success) return result; // Jika sukses, berarti password benar
-        throw new Error(result.message || 'Login gagal');
+        if (response.ok && result.success) {
+            return result;
+        }
+        throw new Error(result.message || 'Password salah!');
     },
 
     async exportAll() {
@@ -29,14 +32,14 @@ const ApiService = {
         }
         const response = await fetch('/api/bulk-import', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                password: password,
-                data: data
-            })
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ password, data })
         });
         const result = await response.json();
-        if (result.success) return result;
-        throw new Error(result.message || 'Gagal menyimpan data');
+        if (!response.ok) throw new Error(result.message || 'Gagal menyimpan data');
+        return result;
     }
 };

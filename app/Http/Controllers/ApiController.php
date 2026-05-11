@@ -43,9 +43,14 @@ class ApiController extends Controller
     public function saveData(Request $request)
     {
         try {
-            $adminPass = env('ADMIN_PASS', 'imama123');
-            if ($request->password !== $adminPass) {
+            $adminPass = config('app.admin_pass', env('ADMIN_PASS', 'imama123'));
+            if ($request->input('password') !== $adminPass) {
                 return response()->json(['success' => false, 'message' => 'Password salah!'], 401);
+            }
+
+            // Jika hanya verifikasi login
+            if ($request->input('action') === 'login') {
+                return response()->json(['success' => true, 'message' => 'Login berhasil']);
             }
 
             $data = $request->input('data');
@@ -82,7 +87,8 @@ class ApiController extends Controller
                 if (isset($data['gallery'])) {
                     Gallery::query()->delete();
                     foreach ($data['gallery'] as $item) {
-                        Gallery::create(['image_url' => $item['image_url'] ?? ($item['image_data'] ?? $item)]);
+                        $url = is_array($item) ? ($item['image_url'] ?? ($item['image_data'] ?? '')) : $item;
+                        Gallery::create(['image_url' => $url]);
                     }
                 }
 
