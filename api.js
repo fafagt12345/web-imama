@@ -3,7 +3,7 @@
  */
 const ApiService = {
     async login(password) {
-        const response = await fetch('/api/data', {
+        const response = await fetch('/api/bulk-import', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password, data: null, action: 'login' })
@@ -28,7 +28,7 @@ const ApiService = {
         if (!password) {
             throw new Error('Tidak ada sesi login. Silakan login kembali.');
         }
-        const response = await fetch('/api/data', {
+        const response = await fetch('/api/bulk-import', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
