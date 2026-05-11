@@ -1,12 +1,12 @@
-/**
- * ApiService - Terhubung ke Vercel Serverless Function (MySQL)
- */
 const ApiService = {
     async login(password) {
         const response = await fetch('/api/bulk-import', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password, data: null, action: 'login' })
+            body: JSON.stringify({
+                password: password,
+                action: 'login'
+            })
         });
         const result = await response.json();
         if (result.success) return result;
