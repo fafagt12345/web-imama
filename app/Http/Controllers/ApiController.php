@@ -48,11 +48,6 @@ class ApiController extends Controller
                 return response()->json(['success' => false, 'message' => 'Password salah!'], 401);
             }
 
-            // Jika hanya cek login
-            if ($request->action === 'login') {
-                return response()->json(['success' => true]);
-            }
-
             $data = $request->input('data');
             if (!$data) return response()->json(['success' => false, 'message' => 'Data kosong'], 400);
 

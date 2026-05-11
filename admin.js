@@ -11,7 +11,6 @@ const defaultData = {
 
 let currentData = { ...defaultData };
 
-// 0. Fungsi Login
 window.handleLogin = async function() {
     const passInput = document.getElementById('adminPassword').value;
     try {
@@ -27,10 +26,12 @@ window.handleLogin = async function() {
 
 function checkAuth() {
     if (!localStorage.getItem('imamaAdmin')) {
-        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('loginOverlay').style.display = 'flex'; // Tampilkan overlay login
+    } else {
+        document.getElementById('loginOverlay').style.display = 'none'; // Sembunyikan jika sudah login
     }
 }
-
+// 1. Fungsi Load Data dari Server
 async function loadData() {
     try {
         const serverData = await ApiService.exportAll();
@@ -98,7 +99,7 @@ window.saveAllData = async function() {
 
 // Inisialisasi & Polling setiap 10 detik agar admin lain juga sinkron
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuth();
+    checkAuth(); // Panggil checkAuth saat DOMContentLoaded
     loadData();
 });
 setInterval(loadData, 10000);

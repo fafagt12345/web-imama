@@ -5,11 +5,10 @@ const ApiService = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 password: password,
-                action: 'login'
             })
         });
         const result = await response.json();
-        if (result.success) return result;
+        if (result.success) return result; // Jika sukses, berarti password benar
         throw new Error(result.message || 'Login gagal');
     },
 
