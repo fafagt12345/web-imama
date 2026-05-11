@@ -8,7 +8,8 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.php" }
+    { "source": "/api/(.*)", "destination": "/api/index.php" },
+    { "source": "/admin", "destination": "/admin.html" }
   ],
   "devCommand": "npm run dev"
 }

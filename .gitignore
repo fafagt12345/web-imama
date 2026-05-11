@@ -1,14 +1,6 @@
-# Dependency directories
-node_modules/
-
-# Debug logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Operating system files
-.DS_Store
-Thumbs.db
-
-# Sensitive environment variables
+/vendor
 .env
+/storage/*.key
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
