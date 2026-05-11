@@ -13,6 +13,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('position');
             $table->string('image')->nullable();
+            $table->string('department')->nullable();
+            $table->string('major')->nullable();
+            $table->string('batch')->nullable();
             $table->timestamps();
         });
     }
