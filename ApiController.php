@@ -9,6 +9,7 @@ use App\Models\Gallery;
 use App\Models\Timeline;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class ApiController extends Controller
 {
@@ -39,43 +40,47 @@ class ApiController extends Controller
 
     public function saveData(Request $request)
     {
+        // Verifikasi Password (sama dengan logic Node.js sebelumnya)
+        $adminPass = env('ADMIN_PASS', 'imama123');
+        if ($request->input('password') !== $adminPass) {
+            return response()->json(['success' => false, 'message' => 'Password salah!'], 401);
+        }
+
+        $data = $request->input('data');
+        if (!$data) {
+            return response()->json(['success' => false, 'message' => 'Payload data kosong'], 400);
+        }
+
         try {
-            return DB::transaction(function () use ($request) {
+            return DB::transaction(function () use ($data) {
                 // Simpan Site Content
                 SiteContent::updateOrCreate(
                     ['id' => 1],
                     [
-                        'hero_title' => $request->input('hero.title'),
-                        'hero_subtitle' => $request->input('hero.subtitle'),
-                        'about_intro' => $request->input('about.intro'),
-                        'about_history' => $request->input('about.history'),
-                        'about_vision' => $request->input('about.vision'),
-                        'contact_email' => $request->input('settings.email'),
-                        'contact_instagram' => $request->input('settings.instagram'),
+                        'hero_title' => $data['hero']['title'] ?? '',
+                        'hero_subtitle' => $data['hero']['subtitle'] ?? '',
+                        'about_intro' => $data['about']['intro'] ?? '',
+                        'about_history' => $data['about']['history'] ?? '',
+                        'about_vision' => $data['about']['vision'] ?? '',
+                        'contact_email' => $data['settings']['email'] ?? '',
+                        'contact_instagram' => $data['settings']['instagram'] ?? '',
                     ]
                 );
 
-                // Sync Data Arrays
-                if ($request->has('events')) {
+                // Sync Arrays
+                if (isset($data['events'])) {
                     Event::query()->delete();
-                    foreach ($request->events as $item) Event::create($item);
+                    foreach ($data['events'] as $item) Event::create($item);
                 }
 
-                if ($request->has('staff')) {
+                if (isset($data['staff'])) {
                     Staff::query()->delete();
-                    foreach ($request->staff as $item) Staff::create($item);
+                    foreach ($data['staff'] as $item) Staff::create($item);
                 }
 
-                if ($request->has('gallery')) {
-                    Gallery::query()->delete();
-                    foreach ($request->gallery as $item) {
-                        Gallery::create(['image_url' => $item['image_data'] ?? ($item['image_url'] ?? $item)]);
-                    }
-                }
-
-                if ($request->has('timeline')) {
+                if (isset($data['timeline'])) {
                     Timeline::query()->delete();
-                    foreach ($request->timeline as $item) Timeline::create($item);
+                    foreach ($data['timeline'] as $item) Timeline::create($item);
                 }
 
                 return response()->json(['success' => true, 'message' => 'Data disinkronkan!']);
