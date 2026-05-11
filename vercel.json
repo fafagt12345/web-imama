@@ -1,15 +1,14 @@
 {
-  "version": 2,
-  "cleanUrls": true,
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {"key": "Cache-Control", "value": "public, max-age=3600"}
-      ]
-    }
-  ],
+  "buildCommand": "echo 'No frontend build needed, serving static files.'",
+  "installCommand": "npm install",
+  "outputDirectory": ".",
   "rewrites": [
-    { "source": "/admin", "destination": "/admin.html" }
-  ]
+    { "source": "/api/(.*)", "destination": "/api/$1" }
+  ],
+  "functions": {
+    "api/*.js": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "devCommand": "npm run dev"
 }
