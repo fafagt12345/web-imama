@@ -1,13 +1,18 @@
 {
-  "buildCommand": "echo 'No frontend build needed, serving static files.'",
+  "version": 2,
+  "buildCommand": "echo 'Building Laravel for Vercel...'",
   "installCommand": "npm install",
   "outputDirectory": ".",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/export-all", "destination": "/api/index.php" },
+    { "source": "/api/bulk-import", "destination": "/api/index.php" }
   ],
   "functions": {
     "api/*.js": {
       "runtime": "@vercel/node"
+    },
+    "api/*.php": {
+      "runtime": "vercel-php@0.6.0"
     }
   },
   "devCommand": "npm run dev"

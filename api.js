@@ -14,7 +14,7 @@ const ApiService = {
     },
 
     async exportAll() {
-        const response = await fetch('/api/data');
+        const response = await fetch('/api/export-all');
         if (!response.ok) {
             // Coba parse pesan error dari body jika response tidak OK
             const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
